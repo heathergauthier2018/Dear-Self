@@ -1,0 +1,1053 @@
+/* =========================
+   Global Variables & Layout
+   ========================= */
+:root {
+  /* Site-wide personalization */
+  --site-bg: #FAF9F6;
+  --site-width: 950px;
+
+  /* Brand palette (defaults; can be overridden by theme-* classes) */
+  --brand-header: #5E7F6E; /* titles/headings */
+  --brand-green:  #1F6B4F; /* accents/chips */
+
+  /* Chips & hearts */
+  --chip-bg:  #e6f4ef;
+  --chip-text:#0f5132;
+  --heart-off:#d4d4d8;  /* light gray */
+  --heart-on: #e11d48;  /* pink-red when favorited */
+}
+
+/* App background + global max-width */
+body {
+  background: var(--site-bg);
+  transition: background-color .2s ease;
+}
+.page-wrap, .card, .customizer, .journal-card { max-width: var(--site-width); }
+
+/* =========================
+   Textures (pure CSS, no files)
+   ========================= */
+
+/* — Diagonal — crisp diagonal lines */
+body[data-bg-texture="diagonal"] {
+  background-color: var(--site-bg);
+  background-image: repeating-linear-gradient(
+    135deg,
+    rgba(0,0,0,0.09) 0 1px,
+    transparent 1px 12px
+  );
+}
+
+/* — Dots — soft dotted field */
+body[data-bg-texture="dots"] {
+  background-color: var(--site-bg);
+  background-image: radial-gradient(rgba(0,0,0,0.10) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* — Grid — light graph paper look */
+body[data-bg-texture="grid"] {
+  background-color: var(--site-bg);
+  background-image:
+    linear-gradient(rgba(0,0,0,0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,0.08) 1px, transparent 1px);
+  background-size: 24px 24px, 24px 24px;
+}
+
+/* — Linen — visible cross-weave */
+body[data-bg-texture="linen"] {
+  background-color: var(--site-bg);
+  background-image:
+    repeating-linear-gradient(0deg,  rgba(0,0,0,0.06) 0 1px, transparent 1px 5px),
+    repeating-linear-gradient(90deg, rgba(0,0,0,0.06) 0 1px, transparent 1px 5px),
+    repeating-linear-gradient(0deg,  rgba(0,0,0,0.025) 0 2px, transparent 2px 12px),
+    repeating-linear-gradient(90deg, rgba(0,0,0,0.025) 0 2px, transparent 2px 12px);
+  background-blend-mode: multiply;
+}
+
+/* — Plaid — tartan-style weave */
+body[data-bg-texture="plaid"] {
+  background-color: var(--site-bg);
+  background-image:
+    repeating-linear-gradient(
+      to right,
+      rgba(0,0,0,0.07) 0 1px,
+      transparent 1px 14px
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      rgba(0,0,0,0.07) 0 1px,
+      transparent 1px 14px
+    ),
+    repeating-linear-gradient(
+      to right,
+      rgba(0,0,0,0.035) 0 6px,
+      transparent 6px 28px
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      rgba(0,0,0,0.035) 0 6px,
+      transparent 6px 28px
+    );
+  background-blend-mode: multiply;
+}
+
+/* — None — base color only */
+body[data-bg-texture="none"] {
+  background-color: var(--site-bg);
+  background-image: none;
+}
+
+/* =========================
+   Typography & Brand Themes
+   ========================= */
+body.header-serif .brand-title,
+body.header-serif .brand-subtitle,
+body.header-serif .page-title { font-family: Merriweather, serif; }
+
+body.header-sans .brand-title,
+body.header-sans .brand-subtitle,
+body.header-sans .page-title { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+
+/* Theme palettes via body class (overrides defaults) */
+/* paler Sage */
+body.theme-sage {
+  /* softer sage text; a touch darker accent for buttons */
+  --brand-header: #A4C3B4;  /* pale sage (text color) */
+  --brand-green:  #5C947A;  /* sage accent for buttons/active states */
+}
+
+/* paler Blush */
+body.theme-blush {
+  --brand-header: #F0C9D1;  /* pale warm blush */
+  --brand-green:  #CE6B80;  /* warm rose accent */
+}
+
+/* Midnight with clear blue tint (not black) */
+body.theme-midnight {
+  --brand-header: #2b4c99; /* cobalt-leaning midnight */
+  --brand-green:  #1f3a77; /* navy accent */
+}
+
+/* Density controls (affects cards/lists app-wide) */
+body.compact-ui .card,
+body.compact-ui .customizer,
+body.compact-ui .fav-card { padding: 12px 14px; }
+body.compact-ui .row.gap { gap: 10px 14px; }
+
+/* Motion level */
+body[data-motion="off"] * { transition: none !important; animation: none !important; }
+body[data-motion="standard"] .thumb:hover { transform: translateY(-1px) scale(1.02); }
+
+/* Card density flag (non-journal body padding tweak) */
+body[data-card-density="snug"] .card .card-body { padding-bottom: 0; }
+
+/* =========================
+   Utility & Shared Elements
+   ========================= */
+.page-wrap { padding: 8px 16px 24px; }
+.shadow-md { box-shadow: 0 8px 32px rgba(16,24,40,.08); }
+
+/* Hide Dark Mode toggles anywhere */
+#dark-mode-toggle, .dark-mode-toggle, [data-dark-toggle],
+header .theme-toggle, button.theme-toggle,
+button[aria-label*="Dark"], button[title*="Dark"],
+a[aria-label*="Dark"], a[title*="Dark"], .dark-mode, .dark-toggle, .theme-toggle {
+  display: none !important;
+}
+
+/* Headings use --brand-header */
+.brand-title,
+.brand-subtitle,
+.page-title,
+h1.brand,
+h2.brand { color: var(--brand-header) !important; }
+
+.brand-title {
+  font-family: Merriweather, serif;
+  font-size: clamp(28px, 4vw, 48px);
+  margin: 0;
+}
+.brand-subtitle {
+  font-family: Merriweather, serif;
+  text-align: center;
+  font-size: clamp(22px, 3vw, 40px);
+  margin: 24px 0 16px;
+}
+
+/* =========================
+   Cards & Buttons
+   ========================= */
+.card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px 24px;
+  margin: 16px auto 24px;
+}
+.card-body { padding-bottom: 8px; }
+.card-footer {
+  display: flex; align-items: center; justify-content: space-between;
+  padding-top: 8px;
+}
+.card-actions { display: flex; align-items: center; gap: 12px; }
+.link-button { background: transparent; border: none; cursor: pointer; text-decoration: underline; }
+
+.primary {
+  background: var(--brand-green); color: #fff; border: none;
+  border-radius: 12px; padding: 10px 16px; cursor: pointer;
+}
+
+/* =========================
+   Chips & Favorites
+   ========================= */
+.chip {
+  display: inline-block;
+  background: var(--chip-bg);
+  color: var(--chip-text);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-weight: 700;
+}
+
+/* Favorite heart (color only; content handled in JS) */
+.fav-btn {
+  border: none; background: transparent; cursor: pointer;
+  font-size: 20px; line-height: 1;
+  color: var(--heart-off);
+  transition: transform .1s ease, color .12s ease, opacity .12s ease;
+  opacity: .95;
+}
+.fav-btn:hover { transform: translateY(-1px) scale(1.05); }
+.fav-btn.active { color: var(--heart-on); }
+
+/* Affirmation/Challenge lines */
+.affirmation-line { margin: 10px 0 4px; }
+.challenge-line   { margin: 0 0 12px; }
+.challenge-text   { color: #111; } /* black per spec */
+
+/* =========================
+   Journal Canvas (visual only)
+   ========================= */
+.journal-card {
+  margin: 8px auto 24px;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #fff;
+}
+
+/* Keep 2:3 aspect and avoid stretching the art */
+.journal-canvas {
+  position: relative;
+  width: min(900px, 92vw);
+  aspect-ratio: 2 / 3;            /* matches 1024×1536 look */
+  margin: 0 auto;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #f7f3eb;            /* paper tone under transparent centers */
+  box-shadow: 0 8px 26px rgba(0,0,0,.08);
+}
+
+/* Image as background layer, non-stretching */
+.journal-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;             /* preserves border thickness */
+  pointer-events: none;
+  user-select: none;
+  border-radius: 16px;
+}
+
+/* Overlay content in the open center */
+.journal-overlay {
+  position: relative;              /* above the image layer */
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: clamp(18px, 4.2vw, 36px);
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+.journal-topline {
+  display: flex; justify-content: flex-end; align-items: center;
+  border: none;
+}
+
+/* Bigger date */
+.journal-date { font-size: clamp(18px, 2.4vw, 26px); }
+
+/* Textarea */
+.journal-textarea {
+  margin-top: 60px;
+  width: 100%;
+  height: 78%;
+  resize: none;
+  border: none !important;
+  background: transparent;
+  outline: none !important;
+  pointer-events: auto;
+  box-shadow: none !important;
+}
+.journal-textarea:focus { outline: none !important; }
+
+/* =========================
+   Customizer Panel (Today)
+   ========================= */
+.customizer {
+  margin: 0 auto 64px;
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px 24px;
+}
+.row { display: flex; flex-wrap: wrap; align-items: center; }
+.row.gap { gap: 16px 24px; }
+.row.end { justify-content: flex-end; }
+
+/* "Save Entry" top-right bar */
+.customizer .topbar {
+  display: flex; align-items: center; justify-content: flex-end;
+  margin-bottom: 8px;
+}
+.customizer .topbar .primary { padding: 10px 16px; }
+
+/* Fields */
+.field { display: flex; flex-direction: column; gap: 8px; min-width: 220px; }
+.field > span { font-weight: 700; }
+.field select {
+  height: 40px; padding: 0 12px; border-radius: 10px;
+  border: 1px solid #e5e7eb; background: #fff;
+}
+
+/* Bold / Italic toggles */
+.toggle-field { display: flex; align-items: center; gap: 10px; }
+.pill {
+  border: 1px solid #e5e7eb; background: #fff;
+  padding: 8px 12px; border-radius: 999px; cursor: pointer;
+}
+.pill.active { background: #eef6f2; border-color: var(--brand-green); color: var(--brand-green); }
+
+/* Color swatches */
+.colors .swatches { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.swatch {
+  width: 28px; height: 28px; border-radius: 6px; border: 2px solid #fff; box-shadow: 0 0 0 1px #e5e7eb;
+  cursor: pointer;
+}
+.swatch.selected { box-shadow: 0 0 0 2px var(--brand-green), 0 0 0 1px #fff inset; }
+
+/* Theme tabs & thumbs */
+.tabs { display: flex; flex-wrap: wrap; gap: 10px; margin: 18px 0 12px; }
+.tab {
+  padding: 8px 14px; border-radius: 999px; border: 1px solid #e5e7eb; background: #fff; cursor: pointer;
+}
+.tab.active { background: #eef6f2; border-color: var(--brand-green); color: var(--brand-green); }
+
+.thumb-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 16px;
+}
+.thumb {
+  display: flex; flex-direction: column; gap: 8px; padding: 10px;
+  border-radius: 12px; background: #fff; border: 1px solid #e5e7eb;
+  cursor: pointer; align-items: center;
+}
+.thumb.active { border-color: var(--brand-green); box-shadow: 0 0 0 2px #e6f4ef; }
+.thumb img { width: 100%; height: auto; border-radius: 8px; display: block; }
+.thumb-label { font-size: 12px; color: #637381; }
+
+/* =========================
+   Favorites & Undo Snackbar
+   ========================= */
+.fav-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+  margin-top: 8px;
+}
+.fav-card {
+  background: #fff;
+  border: 1px solid #ececec;
+  border-radius: 12px;
+  padding: 14px;
+}
+.fav-line { margin: 6px 0; }
+.fav-actions { display: flex; justify-content: flex-end; margin-top: 8px; gap: 8px; }
+.btn-danger {
+  background: #f87171; color: #fff; border: none; border-radius: 10px; padding: 8px 12px; cursor: pointer;
+}
+
+/* Undo / snackbar */
+.undo-bar {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  background: #111827;
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.18);
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  z-index: 9999;
+  font-size: 14px;
+}
+.undo-btn {
+  background: #10b981;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+/* =========================
+   Top Nav (theme-aware)
+   ========================= */
+.app-nav {
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+  align-items: center;
+  padding: 14px 0 8px;
+}
+
+/* Use theme colors */
+.app-nav a {
+  color: var(--brand-header);
+  text-decoration: none;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  transition: color .12s ease, box-shadow .12s ease, background-color .12s ease;
+}
+
+/* Hover → accent color */
+.app-nav a:hover {
+  color: var(--brand-green);
+}
+
+/* Active route → accent color + subtle underline highlight */
+.app-nav a.active,
+.app-nav a[aria-current="page"] {
+  color: var(--brand-green);
+  box-shadow: inset 0 -3px 0 0 var(--brand-green);
+}
+
+/* Make nav follow the "Header Font" choice */
+body.header-serif  .app-nav a { font-family: Merriweather, serif; }
+body.header-sans   .app-nav a { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+
+/* Expanded header font choices (headings + nav) */
+body.header-merriweather .brand-title,
+body.header-merriweather .brand-subtitle,
+body.header-merriweather .page-title,
+body.header-merriweather .app-nav a { font-family: Merriweather, serif; }
+
+body.header-playfair .brand-title,
+body.header-playfair .brand-subtitle,
+body.header-playfair .page-title,
+body.header-playfair .app-nav a { font-family: "Playfair Display", ui-serif, Georgia, serif; }
+
+body.header-lora .brand-title,
+body.header-lora .brand-subtitle,
+body.header-lora .page-title,
+body.header-lora .app-nav a { font-family: Lora, ui-serif, Georgia, serif; }
+
+body.header-cormorant .brand-title,
+body.header-cormorant .brand-subtitle,
+body.header-cormorant .page-title,
+body.header-cormorant .app-nav a { font-family: "Cormorant Garamond", ui-serif, Georgia, serif; }
+
+body.header-cinzel .brand-title,
+body.header-cinzel .brand-subtitle,
+body.header-cinzel .page-title,
+body.header-cinzel .app-nav a { font-family: Cinzel, ui-serif, Georgia, serif; }
+
+body.header-librebask .brand-title,
+body.header-librebask .brand-subtitle,
+body.header-librebask .page-title,
+body.header-librebask .app-nav a { font-family: "Libre Baskerville", ui-serif, Georgia, serif; }
+
+body.header-crimson .brand-title,
+body.header-crimson .brand-subtitle,
+body.header-crimson .page-title,
+body.header-crimson .app-nav a { font-family: "Crimson Pro", ui-serif, Georgia, serif; }
+
+body.header-inter .brand-title,
+body.header-inter .brand-subtitle,
+body.header-inter .page-title,
+body.header-inter .app-nav a { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+
+body.header-montserrat .brand-title,
+body.header-montserrat .brand-subtitle,
+body.header-montserrat .page-title,
+body.header-montserrat .app-nav a { font-family: Montserrat, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+
+body.header-poppins .brand-title,
+body.header-poppins .brand-subtitle,
+body.header-poppins .page-title,
+body.header-poppins .app-nav a { font-family: Poppins, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+
+body.header-raleway .brand-title,
+body.header-raleway .brand-subtitle,
+body.header-raleway .page-title,
+body.header-raleway .app-nav a { font-family: Raleway, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+
+body.header-josefin .brand-title,
+body.header-josefin .brand-subtitle,
+body.header-josefin .page-title,
+body.header-josefin .app-nav a { font-family: "Josefin Sans", ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+
+body.header-quicksand .brand-title,
+body.header-quicksand .brand-subtitle,
+body.header-quicksand .page-title,
+body.header-quicksand .app-nav a { font-family: Quicksand, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+
+body.header-nunito .brand-title,
+body.header-nunito .brand-subtitle,
+body.header-nunito .page-title,
+body.header-nunito .app-nav a { font-family: Nunito, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+
+body.header-bebas .brand-title,
+body.header-bebas .brand-subtitle,
+body.header-bebas .page-title,
+body.header-bebas .app-nav a { font-family: "Bebas Neue", Arial Black, Impact, system-ui, sans-serif; }
+
+body.header-abril .brand-title,
+body.header-abril .brand-subtitle,
+body.header-abril .page-title,
+body.header-abril .app-nav a { font-family: "Abril Fatface", "Playfair Display", ui-serif, Georgia, serif; }
+
+body.header-greatvibes .brand-title,
+body.header-greatvibes .brand-subtitle,
+body.header-greatvibes .page-title,
+body.header-greatvibes .app-nav a { font-family: "Great Vibes", "Dancing Script", cursive; }
+
+body.header-sacramento .brand-title,
+body.header-sacramento .brand-subtitle,
+body.header-sacramento .page-title,
+body.header-sacramento .app-nav a { font-family: "Sacramento", "Great Vibes", cursive; }
+
+/* ==== Past Entries – compact grid + list, overlay, modal ==== */
+
+/* Make sure any earlier .pe-grid rules are overridden */
+.pe-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(220px,1fr)) !important;
+  gap:14px !important;
+}
+
+/* Thumb is compact; we keep 2:3 feel by fixing height */
+.pe-frame.thumb{
+  height:300px;             /* ~2:3 at 220–260px column width */
+  border-radius:10px;
+  overflow:hidden;
+  position:relative;
+}
+.pe-frame.banner{
+  height:128px;
+  border-radius:10px;
+  overflow:hidden;
+  position:relative;
+}
+
+/* Keep whole artwork visible inside the frame */
+.pe-img{ width:100%; height:100%; object-fit:contain; display:block; }
+.pe-frame.banner .pe-img{ object-fit:cover; }
+
+/* Clean, consistent overlay */
+.pe-overlay{
+  position:absolute; inset:0;
+  display:flex; align-items:flex-start; justify-content:space-between;
+  pointer-events:none; padding:10px 12px;
+}
+.pe-title{ font-weight:700; font-size:13px; text-shadow:0 1px 0 rgba(255,255,255,.6); }
+.pe-date { font-weight:700; font-size:12px; text-shadow:0 1px 0 rgba(255,255,255,.6); }
+
+/* Card shell */
+.pe-card{ background:#fff; border:1px solid #eee; border-radius:12px; padding:8px;
+  box-shadow:0 6px 18px rgba(16,24,40,.06); transition:transform .12s ease, box-shadow .12s ease; }
+.pe-card:hover{ transform:translateY(-2px); box-shadow:0 10px 26px rgba(16,24,40,.09); }
+
+/* List view stays slim, one column */
+.pe-list{ display:grid; grid-template-columns:1fr; gap:14px; }
+
+/* Remove legacy corner marker */
+.pe-card .corner-dot, .past-entry-card .corner-dot{ display:none !important; }
+
+/* Fullscreen modal editor/reader */
+.pe-modal{ position:fixed; inset:0; background:rgba(17,24,39,.45); display:grid; place-items:center; z-index:9999; }
+.pe-modal__panel{ width:min(980px,92vw); max-height:90vh; background:#fff; border-radius:16px;
+  box-shadow:0 20px 60px rgba(0,0,0,.25); padding:12px; display:flex; flex-direction:column; }
+.pe-modal__top{ display:flex; gap:8px; align-items:center; padding:4px 6px 8px; }
+.pe-modal__canvasWrap{ overflow:auto; padding:6px; }
+.pe-modal__canvas{ position:relative; margin:0 auto; width:min(700px,92%); aspect-ratio:2/3;
+  border-radius:12px; overflow:hidden; background:#f7f3eb; box-shadow:0 8px 28px rgba(0,0,0,.08); }
+.pe-modal__canvas > img{ width:100%; height:100%; object-fit:contain; display:block; }
+
+/* Editable area (same spot for read-only) */
+.pe-editor-textarea{
+  position:absolute; left:7%; right:7%; top:16%; bottom:10%;
+  resize:none; border:none; outline:none; background:transparent;
+  font-size:18px; line-height:1.6; white-space:pre-wrap;
+}
+
+/* Date in modal (top-right, matches entry style) */
+.pe-modal__date{
+  position:absolute; top:12px; right:14px; font-weight:700; font-size:16px;
+  text-shadow:0 1px 0 rgba(255,255,255,.6);
+}
+/* === Past Entries tidy-up (scoped) === */
+
+/* grid: smaller cards */
+.pe-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+/* list: slim banner */
+.pe-list { display: grid; grid-template-columns: 1fr; gap: 14px; }
+
+/* card shell */
+.pe-card {
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 14px;
+  padding: 8px;
+  box-shadow: 0 6px 18px rgba(16,24,40,.06);
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+.pe-card:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(16,24,40,.09); }
+
+/* frames */
+.pe-frame.thumb {
+  aspect-ratio: 2 / 3;
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+  cursor: pointer;
+}
+.pe-frame.banner {
+  height: 140px;
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+  cursor: pointer;
+}
+
+.pe-img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.pe-frame.banner .pe-img { object-fit: cover; }
+
+.pe-overlay {
+  position: absolute; inset: 0; pointer-events: none;
+  display: flex; align-items: flex-start; gap: 8px;
+  padding: 10px 12px;
+}
+.pe-title { font-weight: 700; font-size: 13px; text-shadow: 0 1px 0 rgba(255,255,255,.6); }
+.pe-date  { font-weight: 700; font-size: 12px; margin-left: auto; text-shadow: 0 1px 0 rgba(255,255,255,.6); }
+
+.pe-actions { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+
+/* icon-only button used for download */
+.icon-button {
+  border: none; background: transparent; cursor: pointer;
+  font-size: 18px; line-height: 1;
+  padding: 2px 4px;
+}
+
+/* month header keeps brand color but smaller */
+.pe-month {
+  margin: 18px 0 8px;
+  text-align: center;
+  font-size: clamp(18px, 2.4vw, 22px);
+  color: var(--brand-header);
+  font-weight: 800;
+  letter-spacing: .2px;
+}
+
+/* edit modal textarea already styled earlier;
+   ensure it sits above image and receives focus */
+.pe-editor-textarea { z-index: 2; }
+/* make cards obviously clickable to open the viewer */
+.pe-clickable { cursor: pointer; }
+
+/* viewer top bar (shares modal styles you already have) */
+.pe-modal__bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: flex-end;
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+}
+/* ===== Past Entries (precise overlay and alignment) ===== */
+.pe-month {
+  margin: 22px 0 10px;
+  text-align: center;
+  font-size: clamp(18px, 2.4vw, 22px);
+  color: var(--brand-header);
+  font-weight: 800;
+  letter-spacing: .2px;
+}
+
+/* tighter grid with smaller cards */
+.pe-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+.pe-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+.pe-card {
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 14px;
+  padding: 10px;
+  box-shadow: 0 6px 20px rgba(16,24,40,.06);
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+.pe-card:hover { transform: translateY(-2px); box-shadow: 0 10px 26px rgba(16,24,40,.09); }
+.pe-card.compact { padding: 8px; }
+
+.pe-frame.thumb { aspect-ratio: 2 / 3; border-radius: 10px; overflow: hidden; position: relative; }
+.pe-frame.banner { height: 130px; border-radius: 10px; overflow: hidden; position: relative; }
+
+.pe-composed, .pe-img { width: 100%; height: 100%; }
+.pe-composed { position: relative; }
+.pe-img { object-fit: contain; display: block; }
+.pe-frame.banner .pe-img { object-fit: cover; }
+.pe-img--blank { background: #f7f3eb; }
+
+/* overlay that reproduces the Today canvas placement */
+.pe-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  display: grid;
+}
+.pe-overlay__inner {
+  position: relative;
+  inset: 0;
+  padding: clamp(16px, 4%, 36px);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pe-date {
+  align-self: flex-end;             /* top-right */
+  font-weight: 700;
+  font-size: clamp(14px, 1.7vw, 18px);
+}
+.pe-body {
+  white-space: pre-wrap;
+  font-size: clamp(14px, 1.65vw, 18px);
+  line-height: 1.55;
+}
+
+/* actions */
+.pe-actions { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+.icon-btn {
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  padding: 6px 8px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+/* modal (viewer/editor) */
+.pe-modal { position: fixed; inset: 0; background: rgba(17,24,39,.45); display: grid; place-items: center; z-index: 9999; }
+.pe-modal__panel { width: min(980px, 92vw); background: #fff; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,.25); padding: 12px; display: flex; flex-direction: column; max-height: 90vh; }
+.pe-modal__top { display: flex; align-items: center; gap: 8px; padding: 4px 6px 8px; }
+.pe-modal__canvasWrap { overflow: auto; padding: 6px; }
+.pe-modal__canvas { position: relative; margin: 0 auto; width: min(720px, 92%); aspect-ratio: 2 / 3; border-radius: 12px; overflow: hidden; background: #f7f3eb; box-shadow: 0 8px 28px rgba(0,0,0,.08); }
+.pe-modal__canvas > img { width: 100%; height: 100%; object-fit: contain; display: block; }
+
+/* editor textarea sits inside overlay under the date */
+.pe-editor-textarea {
+  width: 100%;
+  height: 78%;
+  border: none;
+  outline: none;
+  background: transparent;
+  resize: none;
+  font: inherit;
+  color: inherit;
+  pointer-events: auto;
+}
+/* --- Past Entries: frame/overlay consistency --- */
+.pe-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 18px;
+}
+.pe-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.pe-card { background:#fff; border:1px solid #eee; border-radius:14px; padding:10px;
+  box-shadow:0 6px 20px rgba(16,24,40,.06); transition:.12s transform,.12s box-shadow; }
+.pe-card:hover { transform: translateY(-2px); box-shadow:0 10px 26px rgba(16,24,40,.09); }
+
+.pe-frame.thumb { aspect-ratio: 2 / 3; border-radius: 10px; overflow: hidden; position: relative; cursor: pointer; }
+.pe-frame.banner { height: 140px; border-radius: 10px; overflow: hidden; position: relative; cursor: pointer; }
+
+.pe-img { width:100%; height:100%; object-fit: contain; display:block; }
+.pe-frame.banner .pe-img { object-fit: cover; }
+
+.pe-overlay { position: absolute; inset: 0; }
+.pe-date { font-weight: 700; }
+.pe-title { font-weight: 700; }
+
+.pe-actions { display:flex; align-items:center; gap:10px; margin-top:8px; }
+
+/* VIEW & EDIT modals share the same canvas sizing */
+.pe-modal { position:fixed; inset:0; background:rgba(17,24,39,.45); display:grid; place-items:center; z-index:9999; }
+.pe-modal__panel { width:min(980px,92vw); background:#fff; border-radius:16px; box-shadow:0 20px 60px rgba(0,0,0,.25);
+  padding:12px; display:flex; flex-direction:column; max-height:90vh; }
+.pe-modal__top { display:flex; align-items:center; gap:8px; padding:4px 6px 8px; }
+.pe-modal__canvasWrap { overflow:auto; padding:6px; }
+.pe-modal__canvas { position:relative; width:min(720px,92%); aspect-ratio: 2 / 3; border-radius:12px; overflow:hidden; background:#f7f3eb;
+  box-shadow:0 8px 28px rgba(0,0,0,.08); margin:0 auto; }
+.pe-modal__canvas > img { width:100%; height:100%; object-fit: contain; display:block; }
+
+.pe-editor-textarea {
+  position:absolute; resize:none; border:none; outline:none; background:transparent;
+  font-size:18px; line-height:1.6; white-space:pre-wrap;
+}
+
+/* hidden offscreen render (download) */
+.pe-render .pe-paper { position:relative; width:900px; aspect-ratio: 2 / 3; border-radius:12px; overflow:hidden; background:#f7f3eb; }
+.pe-paper__img { width:100%; height:100%; object-fit: contain; display:block; }
+.pe-paper__overlay { position:absolute; }
+.pe-paper__date { position:absolute; font-weight:700; }
+.pe-paper__body { margin-top:44px; line-height:1.6; text-align:left; }
+/* ==== Past Entries: consistent "Today" layout ==== */
+
+/* every preview/view canvas uses this same relative wrapper */
+.pe-frame,
+.pe-modal__canvas {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #f7f3eb;
+}
+
+.pe-frame .pe-img,
+.pe-modal__canvas > img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* keep full border visible */
+  display: block;
+}
+
+/* --- Full size (view + edit) overlay geometry --- */
+.pe-date--full {
+  position: absolute;
+  top: 5%;
+  right: 7%;
+  font-weight: 800;
+  font-size: clamp(18px, 2.2vw, 28px);
+  text-shadow: 0 1px 0 rgba(255,255,255,.6);
+  pointer-events: none;
+}
+
+.pe-body--full {
+  position: absolute;
+  left: 7%;
+  right: 7%;
+  top: calc(5% + 34px);        /* below the date */
+  bottom: 8%;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  overflow: auto;
+}
+
+/* textarea in the editor uses same geometry so what-you-see-is-what-you-get */
+.pe-editor-textarea.pe-body--full {
+  resize: none;
+  border: none;
+  outline: none;
+  background: transparent;
+}
+
+/* --- Thumbnails (grid card) geometry --- */
+.pe-date--thumb {
+  position: absolute;
+  top: 6%;
+  right: 7%;
+  font-weight: 800;
+  font-size: clamp(10px, 1.7vw, 13px);
+  text-shadow: 0 1px 0 rgba(255,255,255,.6);
+  pointer-events: none;
+}
+
+.pe-snippet--thumb {
+  position: absolute;
+  left: 7%;
+  right: 7%;
+  top: calc(6% + 16px);
+  font-size: clamp(10px, 1.5vw, 12px);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;       /* keep preview tidy */
+  -webkit-box-orient: vertical;
+}
+
+/* list-view banners continue to use object-fit: cover for the art,
+   but the date/body still use the same pinned coordinates */
+.pe-frame.banner { height: 160px; }
+.pe-frame.banner .pe-img { object-fit: cover; }
+/* ===== Past Entries: compact vertical color panel (editor only) ===== */
+.pe-color-panel {
+  display: flex;
+  align-items: center;
+  margin-left: 8px;
+}
+
+/* two-narrow-columns, short + scrollable; keeps width tiny */
+.pe-color-scroll {
+  display: grid;
+  grid-template-columns: repeat(2, 22px);
+  gap: 6px;
+  max-height: 120px;         /* small footprint */
+  overflow-y: auto;
+  padding: 4px 2px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+}
+
+/* reuse your .swatch but smaller for this panel */
+.swatch.pe-mini {
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  box-shadow: 0 0 0 1px #e5e7eb;
+}
+.swatch.pe-mini.selected {
+  box-shadow: 0 0 0 2px var(--brand-green), 0 0 0 1px #fff inset;
+}
+/* ===== Empty-state: Tricolor, no boxes ===== */
+.empty-cta {
+  max-width: 760px;
+  margin: 18px auto 8px;
+  text-align: center;
+}
+
+/* palette (only three soft tones) */
+.empty-cta--tricolor{
+  --c1: #F5AFC6;  /* blush */
+  --c2: #C7D2FE;  /* periwinkle */
+  --c3: #BBD7C5;  /* pale sage */
+}
+
+/* title: elegant, slightly larger, 3-stop gradient text */
+.empty-cta__title{
+  margin: 2px 0 10px;
+  font-family: Merriweather, serif;
+  font-weight: 900;
+  font-size: clamp(22px, 2.4vw, 28px);
+  background: linear-gradient(90deg, var(--c1), var(--c2), var(--c3));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* body: readable neutral, roomy line-height */
+.empty-cta__line{
+  margin: 0 auto 14px;
+  max-width: 720px;
+  color: #5b5360;
+  line-height: 1.75;
+  font-size: 16px;
+  position: relative;
+}
+
+/* subtle tricolor accent rule — not a box */
+.empty-cta__line::after{
+  content:"";
+  display:block;
+  height: 2px;
+  width: 64%;
+  margin: 14px auto 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--c1), var(--c2), var(--c3));
+}
+
+/* button: transparent with tricolor border; no fill */
+.empty-cta__btn {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  color: var(--brand-green) !important;  /* or your preferred color */
+  font-weight: 800;
+  text-decoration: underline;            /* optional */
+}
+
+
+/* tricolor “halo” border only, transparent center */
+.empty-cta__btn--tri{
+  background:
+    linear-gradient(transparent,transparent) padding-box,
+    linear-gradient(90deg, var(--c1), var(--c2), var(--c3)) border-box;
+  border: 2px solid transparent;
+  color: #3e3340;
+  box-shadow: 0 6px 16px rgba(16,24,40,.06);
+}
+.empty-cta__btn--tri:hover{
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(16,24,40,.09);
+}
+.empty-cta__btn--tri:active{
+  transform: none;
+}
+/* --- Remove underline from the CTA link on Past Entries --- */
+.empty-cta__plain,
+.empty-cta__plain:visited,
+.empty-cta__plain:hover,
+.empty-cta__plain:active {
+  text-decoration: none !important;
+  border-bottom: 0 !important;
+  box-shadow: none !important;
+}
+
+/* --- Remove the active tab underline in the top nav --- */
+.app-nav a.active,
+.app-nav a[aria-current="page"] {
+  box-shadow: none !important;   /* kills the inset underline bar */
+}
+
+/* Keep the hover color change without adding any line */
+.app-nav a:hover {
+  text-decoration: none;
+}
+/* Past Entries – CTA link: never underline */
+.card .empty-cta a,
+.card a.empty-cta__plain,
+.card .empty-cta a:visited,
+.card .empty-cta a:hover,
+.card .empty-cta a:active {
+  text-decoration: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+/* keep the nav active tab clean (no underline bar) */
+.app-nav a.active,
+.app-nav a[aria-current="page"] { box-shadow: none !important; }
