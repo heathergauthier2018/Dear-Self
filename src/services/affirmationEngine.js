@@ -61,7 +61,7 @@ const DEFAULT_PREFS = {
   navOrder: ['today', 'past', 'favorites', 'settings'],
   cardOrder: 'affirmation-first',
   showCategoryChip: true,
-  // Removed confirmRegenerate and weekStart per latest request
+  // confirmRegenerate and weekStart removed per request
   dateFormat: 'long',
   pastDefaultRange: 'all',
   timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Chicago',
@@ -86,22 +86,23 @@ export function setUserPrefs(patch) {
 /* ------------------------------------------------------------------ */
 export function listEntries() {
   const list = safeRead(KEYS.entries, []);
-  // Normalize a little to avoid undefined fields downstream
-  return Array.isArray(list) ? list.map((e) => ({
-    id: e.id,
-    iso: e.iso,
-    content: e.content ?? '',
-    style: {
-      themeKey: e.style?.themeKey,
-      imageSrc: e.style?.imageSrc,
-      fontFamily: e.style?.fontFamily,
-      fontColor: e.style?.fontColor,
-      dateColor: e.style?.dateColor,
-      fontSize: e.style?.fontSize,
-      bold: !!e.style?.bold,
-      italic: !!e.style?.italic,
-    },
-  })) : [];
+  return Array.isArray(list)
+    ? list.map((e) => ({
+        id: e.id,
+        iso: e.iso,
+        content: e.content ?? '',
+        style: {
+          themeKey: e.style?.themeKey,
+          imageSrc: e.style?.imageSrc,
+          fontFamily: e.style?.fontFamily,
+          fontColor: e.style?.fontColor,
+          dateColor: e.style?.dateColor,
+          fontSize: e.style?.fontSize,
+          bold: !!e.style?.bold,
+          italic: !!e.style?.italic,
+        },
+      }))
+    : [];
 }
 
 export function addEntry(content = '', style = {}) {
@@ -127,7 +128,7 @@ export function addEntry(content = '', style = {}) {
   const list = listEntries();
   list.push(entry);
   safeWrite(KEYS.entries, list);
-  // Touch "today" so ensureTodayAffirmation shows today's card even after save
+
   const today = safeRead(KEYS.today, {});
   safeWrite(KEYS.today, { ...today, lastSavedIso: entry.iso });
   return entry;
@@ -166,22 +167,21 @@ export function listFavorites() {
   return Array.isArray(favs) ? favs : [];
 }
 
-// Backwards-compatible alias for older imports/components
+// Back-compat alias for older imports
 export const listFavoriteItems = (...args) => listFavorites(...args);
 
 export function toggleFavorite(item) {
-  // item expected shape: { id, text, challenge, category/theme }
   const favs = listFavorites();
-  const id = item.id || `${item.date || ''}-${item.text || ''}`;
-  const idx = favs.findIndex((f) => (f.id || f.text) === (id || item.text));
+  const id = item?.id || `${item?.date || ''}-${item?.text || ''}`;
+  const idx = favs.findIndex((f) => (f.id || f.text) === (id || item?.text));
   if (idx >= 0) {
     favs.splice(idx, 1);
   } else {
     favs.push({
       id,
-      text: item.text || item.affirmation || '',
-      challenge: item.challenge || '',
-      category: item.category || item.theme || 'Daily',
+      text: item?.text || item?.affirmation || '',
+      challenge: item?.challenge || '',
+      category: item?.category || item?.theme || 'Daily',
       addedIso: new Date().toISOString(),
     });
   }
@@ -189,13 +189,22 @@ export function toggleFavorite(item) {
   return favs;
 }
 
+/** Explicit remover to satisfy components importing removeFavorite */
+export function removeFavorite(target) {
+  const favs = listFavorites();
+  const id =
+    typeof target === 'string'
+      ? target
+      : target?.id || `${target?.date || ''}-${target?.text || ''}`;
+
+  const next = favs.filter((f) => (f.id || f.text) !== (id || target?.text));
+  safeWrite(KEYS.favorites, next);
+  return next;
+}
+
 /* ------------------------------------------------------------------ */
 /* Today Card (Affirmation + Challenge)                               */
 /* ------------------------------------------------------------------ */
-/**
- * We keep a simple deterministic generator so today's card is stable per day.
- * Stored in KEYS.today as: { ymd: 'YYYY-MM-DD', text, challenge, category }
- */
 function ymd(d = new Date()) {
   const yyyy = d.getFullYear();
   const mm = String(d.getMonth() + 1).padStart(2, '0');
@@ -226,14 +235,13 @@ const CHALLENGES = [
 ];
 
 function seededPick(seed, arr) {
-  // simple LCG from date seed
   let x = seed % 2147483647;
   x = (x * 48271) % 2147483647;
   return arr[x % arr.length];
 }
 
 function buildTodayCard(today = new Date()) {
-  const s = Number(ymd(today).replace(/-/g, '')); // YYYYMMDD number
+  const s = Number(ymd(today).replace(/-/g, ''));
   const text = seededPick(s, AFFIRMATIONS);
   const challenge = seededPick(s * 17, CHALLENGES);
   return {
@@ -242,7 +250,7 @@ function buildTodayCard(today = new Date()) {
     text,
     affirmation: text,
     challenge,
-    category: 'Daily', // used by themeOf(card)
+    category: 'Daily',
   };
 }
 
@@ -260,12 +268,16 @@ export function ensureTodayAffirmation() {
     };
   }
   const next = buildTodayCard(new Date());
-  safeWrite(KEYS.today, { ymd: todayKey, text: next.text, challenge: next.challenge, category: next.category });
+  safeWrite(KEYS.today, {
+    ymd: todayKey,
+    text: next.text,
+    challenge: next.challenge,
+    category: next.category,
+  });
   return next;
 }
 
 export function regenerateToday(force = false) {
-  // If you want the “confirm before regenerate” behavior, do it in UI.
   const next = buildTodayCard(new Date());
   safeWrite(KEYS.today, {
     ymd: ymd(new Date()),
@@ -286,13 +298,10 @@ export function regenerateToday(force = false) {
     const list = listEntries();
     let changed = false;
     const fix = (src) => {
-      // If it looks like an old /src/images import, replace with public URL
       if (!src) return src;
       if (/\/images\//.test(src) && !/^https?:/.test(src) && !src.startsWith(PUBLIC)) {
-        // leave alone if already absolute under PUBLIC
         return src;
       }
-      // if it was e.g. "static/media/..." from CRA imports, prefer saved src
       return src;
     };
 
@@ -301,17 +310,11 @@ export function regenerateToday(force = false) {
       const imageSrc = e.style?.imageSrc || imageUrl(`${themeKey}.png`);
       const corrected = fix(imageSrc) || imageUrl(`${themeKey}.png`);
       if (corrected !== e.style?.imageSrc) changed = true;
-      return {
-        ...e,
-        style: { ...e.style, imageSrc: corrected },
-      };
+      return { ...e, style: { ...e.style, imageSrc: corrected } };
     });
 
-    if (changed) {
-      safeWrite(KEYS.entries, fixed);
-    }
+    if (changed) safeWrite(KEYS.entries, fixed);
 
-    // also ensure prefs has a default paper
     const prefs = getUserPrefs();
     if (!prefs.selectedPaperKey) {
       setUserPrefs({ selectedPaperKey: DEFAULT_PAPER_KEY });
