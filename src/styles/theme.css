@@ -1051,3 +1051,1395 @@ body.header-sacramento .app-nav a { font-family: "Sacramento", "Great Vibes", cu
 /* keep the nav active tab clean (no underline bar) */
 .app-nav a.active,
 .app-nav a[aria-current="page"] { box-shadow: none !important; }
+/* ==== LOCKED JOURNAL GEOMETRY — keep prior width/length, no cropping ==== */
+
+/* Pull the journal card inward a bit but keep your new size */
+.journal-card {
+  padding: 10px 8px;
+  border-radius: 14px;
+  background: #fff;
+}
+
+/* Exact canvas sizing:
+   - width: same look you liked (fits between the white columns)
+   - height: computed from 2:3 ratio so the whole paper fits without crop */
+.journal-canvas {
+  position: relative;
+  width: min(860px, 88vw);                  /* ← keep the width you liked */
+  height: calc(min(860px, 88vw) * 1.5);     /* ← 2:3 ratio (height = 1.5 * width) */
+  margin: 0 auto;
+  border-radius: 12px;
+  overflow: hidden;                          /* keeps overlay inside the page */
+  background: transparent;
+}
+
+/* Paper image never crops; it scales to fit the canvas exactly */
+.journal-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;      /* ← critical: show full top & bottom */
+  object-position: center;  /* center inside the canvas */
+  display: block;
+  pointer-events: none;
+}
+
+/* Overlay pinned to the same box as the image */
+.journal-overlay { position: absolute; inset: 0; }
+
+/* Keep your textarea constraints tied to the canvas (already positioned in JS) */
+.journal-textarea {
+  background: transparent;
+  border: none;
+  outline: none;
+  resize: none;
+}
+/* === Past Entries: remove white outline, make image flush === */
+.pe-card .pe-frame.thumb,
+.pe-card .pe-frame.banner{
+  position: relative;
+  padding: 0 !important;         /* no inner rim */
+  border-radius: 12px;
+  overflow: hidden;
+  background: transparent !important; /* don't show a white fill */
+}
+
+.pe-card .pe-img{
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;            /* show full page; change to 'cover' if you prefer */
+  border-radius: inherit;
+}
+
+/* If any legacy spacing sneaks in, zero it out */
+.pe-card .pe-frame{ margin: 0 !important; }
+/* Fix uneven white “outline” around Past Entries thumbnails by matching the
+   frame background to the paper tone that shows through image transparency. */
+.pe-frame { background: #f7f3eb; }
+
+/* TODAY: keep long unbroken words inside the page. */
+.journal-textarea {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+/* === Fix: force wrap inside the paper === */
+.journal-canvas,
+.journal-overlay,
+.journal-textarea { box-sizing: border-box; }
+
+.journal-textarea {
+  overflow: auto;              /* scroll inside the page when long */
+  white-space: pre-wrap;       /* keep newlines */
+  overflow-wrap: anywhere;     /* modern break */
+  word-break: break-word;      /* legacy break */
+  word-break: break-all;       /* hard fallback for mega-long tokens */
+  hyphens: auto;               /* optional nice hyphenation */
+  padding-right: 4px;          /* keeps text clear of scrollbar */
+}
+/* Minimal, neutral icon-only button used for download/delete */
+.icon-ghost {
+  background: transparent;
+  border: none;
+  padding: 4px;
+  border-radius: 8px;
+  color: #6b7280;           /* neutral gray */
+  cursor: pointer;
+  line-height: 0;
+  display: inline-grid;
+  place-items: center;
+}
+.icon-ghost:hover { color: #374151; transform: translateY(-1px); }
+.icon-ghost:active { transform: translateY(0); }
+/* === Past Entries: strict 2:3 canvas with even border === */
+.pe-frame.thumb,
+.pe-frame.banner { position: relative; }
+
+.pe-frame.thumb .pe-thumbCanvas,
+.pe-frame.banner .pe-thumbCanvas {
+  position: absolute;
+  inset: 0;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain; /* keeps the paper border even */
+}
+
+/* Date top-right; snippet top-left below date (thumbnails) */
+.pe-date--thumb {
+  position: absolute;
+  top: 6%;
+  right: 7%;
+  left: 7%;
+  text-align: right;
+  font-weight: 800;
+  text-shadow: 0 1px 0 rgba(255,255,255,.6);
+  pointer-events: none;
+  font-size: clamp(10px, 1.6vw, 13px);
+}
+.pe-snippet--thumb {
+  position: absolute;
+  left: 7%;
+  right: 7%;
+  top: calc(6% + 18px);
+  font-size: clamp(10px, 1.5vw, 12px);
+  line-height: 1.55;
+  white-space: pre-wrap;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  text-shadow: 0 1px 0 rgba(255,255,255,.6);
+}
+
+/* Icon-only control (no button chrome) */
+.icon-only {
+  background: transparent;
+  border: none;
+  padding: 2px 4px;
+  line-height: 1;
+  cursor: pointer;
+  color: #444;
+}
+.icon-only:hover { transform: translateY(-1px); }
+
+/* Today page: never overflow the page bounds, even with long words */
+.journal-textarea,
+.pe-editor-textarea {
+  overflow: auto !important;
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
+}
+/* --- TODAY CANVAS: never spill out, wrap brutal long words --- */
+.journal-canvas{ overflow:hidden; }  /* safety */
+.journal-textarea{
+  position:absolute;
+  left:7%; right:7%;
+  top:calc(5% + 28px); bottom:8%;
+  background:transparent; border:0; outline:0; resize:none;
+  overflow:auto;
+  line-height:1.6;
+  font-size:clamp(14px,1.9vw,20px);
+
+  /* the two below stop single-super-long “words” from running off */
+  overflow-wrap:anywhere;
+  word-break:break-word;
+
+  /* tiny right padding so the scrollbar never hides characters */
+  padding-right:2px;
+}
+/* --- PAST ENTRIES • GRID CARD REFINEMENT --- */
+.pe-card{
+  padding:0;                       /* kill the thick inner white band */
+  border:1px solid #eee;
+  border-radius:12px;
+  background:#fff;
+  box-shadow:0 6px 18px rgba(16,24,40,.06);
+}
+
+.pe-frame.thumb{
+  position:relative;
+  aspect-ratio:2/3;
+  border-radius:12px;
+  overflow:hidden;
+  background:#f7f3eb;
+}
+
+/* image fills the frame without cropping so borders stay even */
+.pe-frame.thumb .pe-img{
+  width:100%; height:100%;
+  object-fit:contain;
+  display:block;
+}
+
+/* date + body sit precisely like Today’s canvas */
+.pe-overlay{ position:absolute; inset:0; pointer-events:none; }
+.pe-overlay__inner{
+  position:absolute; inset:0;
+  padding:clamp(16px,4%,36px);
+}
+.pe-date{ 
+  position:absolute; top:5%; right:7%;
+  font-weight:800; font-size:clamp(12px,1.9vw,18px);
+  text-shadow:0 1px 0 rgba(255,255,255,.6);
+}
+.pe-body{
+  position:absolute; left:7%; right:7%;
+  top:calc(5% + 26px); bottom:10%;
+  white-space:pre-wrap; line-height:1.6; font-size:clamp(12px,1.8vw,16px);
+  overflow:hidden;
+}
+
+/* ACTION BAR sits ON the image, flush bottom, thin and elegant */
+.pe-actions{
+  position:absolute; left:0; right:0; bottom:0;
+  display:flex; align-items:center; justify-content:flex-start;
+  gap:14px;
+  padding:8px 10px;
+  pointer-events:auto;
+  background:linear-gradient(to top, rgba(255,255,255,.92), rgba(255,255,255,.65) 60%, transparent);
+  border-top:1px solid rgba(0,0,0,.06);
+}
+
+/* reorder: Copy (1) • Edit (2) • Download (3) • Trash (4) */
+.pe-actions .pe-copy    { order:1; }
+.pe-actions .pe-edit    { order:2; }
+.pe-actions .pe-download{ order:3; }
+.pe-actions .pe-delete  { order:4; }
+
+/* link / icon look (no buttons) */
+.pe-actions a,
+.pe-actions button{
+  border:0; background:transparent; padding:0;
+  font-weight:600; color:#2f4f4f; cursor:pointer;
+}
+.pe-actions .icon{ font-size:18px; line-height:1; }
+.pe-actions .pe-delete{ color:#6b6b6b; }      /* subtle, not red */
+.pe-actions .pe-delete:hover{ color:#111; transform:translateY(-1px); }
+/* ==== Past Entries: even frame + bottom actions (grid & list) ==== */
+
+/* card shell */
+.pe-card{
+  background:#fff;
+  border:1px solid #eee;               /* thin, even border */
+  border-radius:12px;
+  padding:8px;
+  box-shadow:0 6px 18px rgba(16,24,40,.06);
+  transition:transform .12s ease, box-shadow .12s ease;
+}
+.pe-card:hover{ transform:translateY(-2px); box-shadow:0 10px 24px rgba(16,24,40,.09); }
+
+/* image frame (keeps 2:3, no white-right bias) */
+.pe-frame.thumb{
+  position:relative;
+  aspect-ratio:2 / 3;
+  border-radius:10px;
+  overflow:hidden;
+  background:#f7f3eb;                  /* same “paper” tone behind transparent centers */
+}
+
+/* list banner version */
+.pe-frame.banner{
+  height:140px;
+  border-radius:10px;
+  overflow:hidden;
+  position:relative;
+  background:#f7f3eb;
+}
+
+/* image never stretches and stays centered */
+.pe-img{
+  width:100%;
+  height:100%;
+  object-fit:contain;                   /* keeps full border visible */
+  display:block;
+}
+.pe-frame.banner .pe-img{ object-fit:cover; }
+
+/* overlay that matches Today canvas geometry for previews */
+.pe-overlay{
+  position:absolute; inset:0;
+  pointer-events:none;
+}
+.pe-overlay__inner{
+  position:absolute; inset:0;
+  padding:clamp(14px,4%,32px);
+}
+.pe-date{
+  position:absolute; top:5%; right:7%;
+  font-weight:800;
+  font-size:clamp(12px,1.7vw,16px);
+  text-shadow:0 1px 0 rgba(255,255,255,.6);
+}
+.pe-body{
+  position:absolute; left:7%; right:7%;
+  top:calc(5% + 24px); bottom:8%;
+  white-space:pre-wrap; line-height:1.6; overflow:hidden; /* preview is clipped */
+  font-size:clamp(12px,1.6vw,16px);
+}
+
+/* actions row sits at bottom of the card, not overlayed */
+.pe-actions{
+  display:flex; align-items:center; gap:14px;
+  padding:10px 4px 2px;
+  border-top:1px solid #eee;           /* very thin divider; remove if you want no line */
+  margin-top:8px;
+}
+
+/* order: Copy • Edit • Download • Trash */
+.pe-actions .pe-copy{ order:1; }
+.pe-actions .pe-edit{ order:2; }
+.pe-actions .pe-download{ order:3; }
+.pe-actions .pe-delete{ order:4; }
+
+/* icon-only buttons look like links (no colored pill) */
+.pe-actions button,
+.pe-actions .icon-button{
+  background:transparent;
+  border:0;
+  padding:0 2px;
+  font:inherit;
+  color:#2f4f4f;
+  cursor:pointer;
+}
+.pe-actions .icon-button svg{ width:18px; height:18px; display:inline-block; vertical-align:-3px; }
+.pe-actions .icon-button:hover{ opacity:.8; }
+
+/* compact grid */
+.pe-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
+  gap:16px;
+}
+.pe-list{ display:grid; grid-template-columns:1fr; gap:14px; }
+
+/* month header */
+.pe-month{
+  margin:22px 0 10px; text-align:center;
+  font-size:clamp(18px,2.4vw,22px);
+  color:var(--brand-header); font-weight:800; letter-spacing:.2px;
+}
+/* ==== Today page canvas hard constraints (no spillover) ==== */
+.journal-card .journal-canvas{
+  position:relative;
+  aspect-ratio:2 / 3;
+  width:min(860px, 88vw);
+  margin:0 auto;
+  border-radius:12px;
+  overflow:hidden;                      /* critical: clip overlay within page */
+  background:transparent;
+}
+
+.journal-card .journal-img{
+  position:absolute; inset:0;
+  width:100%; height:100%;
+  object-fit:contain; display:block; pointer-events:none;
+}
+
+.journal-card .journal-overlay{ position:absolute; inset:0; }
+
+/* textarea lives INSIDE the page; long text scrolls INSIDE it */
+.journal-card .journal-textarea{
+  position:absolute;
+  left:7%; right:7%;
+  top:calc(5% + 28px); bottom:8%;
+  background:transparent;
+  border:none; outline:none; resize:none;
+  overflow:auto !important;             /* force internal scrolling */
+  white-space:pre-wrap; overflow-wrap:anywhere;
+  line-height:1.6;
+  font-size:clamp(14px, 1.9vw, 20px);
+  box-sizing:border-box;
+}
+/* =========================
+   PATCH — Past Entries & Today (override)
+   ========================= */
+
+/* Make the preview card itself the positioning context */
+.pe-card{
+  position: relative !important;
+  padding: 0 !important;           /* removes thick inner white band */
+  overflow: hidden !important;     /* keeps preview flush */
+  border: 1px solid #eee;
+  border-radius: 12px;
+  background: #fff;
+}
+
+/* Thumbnail & banner frames keep perfect 2:3 / even border */
+.pe-frame.thumb,
+.pe-frame.banner{
+  position: relative;
+  overflow: hidden;
+  background: #f7f3eb;             /* same tone as journal paper */
+}
+.pe-frame.thumb{ aspect-ratio: 2 / 3; }
+.pe-frame.banner{ height: 160px; }
+
+.pe-frame .pe-img{                 /* image sizing */
+  width: 100%; height: 100%;
+  display: block;
+  object-fit: contain;             /* even border all around */
+}
+.pe-frame.banner .pe-img{ object-fit: cover; } /* list banner look */
+
+/* Date (top-right) & snippet (top-left under date) in grid thumbnails */
+.pe-date--thumb{
+  position: absolute; top: 6%; right: 7%;
+  font-weight: 800; font-size: clamp(10px,1.7vw,13px);
+  text-shadow: 0 1px 0 rgba(255,255,255,.6);
+  pointer-events: none;
+}
+.pe-snippet--thumb{
+  position: absolute; left: 7%; right: 7%; top: calc(6% + 18px);
+  font-size: clamp(10px,1.5vw,12px); line-height: 1.55;
+  white-space: pre-wrap;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-shadow: 0 1px 0 rgba(255,255,255,.6);
+}
+
+/* List (banner) geometry to match your good example */
+.pe-frame.banner .pe-date{
+  position: absolute; top: 10px; right: 14px;
+  font-weight: 800; font-size: 16px;
+  text-shadow: 0 1px 0 rgba(255,255,255,.6);
+}
+.pe-frame.banner .pe-snippet{
+  position: absolute; left: 14px; right: 14px; top: 36px;
+  font-size: 15px; line-height: 1.6; white-space: pre-wrap;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ACTIONS BAR — scope to card so it never spans the page */
+.pe-card .pe-actions{
+  position: absolute; left: 0; right: 0; bottom: 0;
+  display: flex; align-items: center; gap: 14px;
+  padding: 8px 10px;
+  pointer-events: auto;
+  background: linear-gradient(to top,
+              rgba(255,255,255,.92), rgba(255,255,255,.65) 60%, transparent);
+  border-top: 1px solid rgba(0,0,0,.06);
+}
+/* Order: Copy • Edit • Download • Trash */
+.pe-card .pe-actions .pe-copy     { order: 1; }
+.pe-card .pe-actions .pe-edit     { order: 2; }
+.pe-card .pe-actions .pe-download { order: 3; }
+.pe-card .pe-actions .pe-delete   { order: 4; }
+
+/* Icon/links — no button chrome and no red */
+.pe-card .pe-actions a,
+.pe-card .pe-actions button{
+  background: transparent; border: 0; padding: 0;
+  color: #2f4f4f; font-weight: 600; cursor: pointer;
+}
+.pe-card .pe-actions .icon{ font-size: 18px; line-height: 1; }
+.pe-card .pe-actions .pe-delete{ color: #6b6b6b; }
+.pe-card .pe-actions .pe-delete:hover{ color: #111; transform: translateY(-1px); }
+
+/* TODAY PAGE — force wrapping for any editor widget inside the paper */
+.journal-overlay textarea,
+.journal-overlay [contenteditable="true"],
+.journal-overlay .journal-textarea{
+  position: absolute;
+  left: 7%; right: 7%;
+  top: calc(5% + 30px); bottom: 8%;
+  border: 0 !important; outline: 0 !important; background: transparent;
+  resize: none; box-shadow: none !important;
+  margin: 0; padding-right: 4px;
+  line-height: 1.6; font-size: clamp(14px,1.9vw,20px);
+
+  /* hard wrap rules so long tokens never run off the page */
+  white-space: pre-wrap !important;
+  overflow: auto !important;
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
+  hyphens: auto;
+}
+
+/* Safety: ensure the canvas is the clipping box */
+.journal-canvas{ overflow: hidden !important; }
+
+/* If any container around thumbnails adds inner spacing, kill it */
+.pe-card .pe-frame{ margin: 0 !important; padding: 0 !important; }
+/* PAST ENTRIES — make the preview fill the card exactly */
+.pe-card{
+  position: relative !important;
+  padding: 0 !important;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  background: #fff;
+  overflow: hidden !important;
+  display: block;
+}
+
+.pe-frame.thumb,
+.pe-frame.banner{
+  width: 100% !important;     /* <-- removes the white column */
+  display: block !important;
+  position: relative;
+  overflow: hidden;
+  background: #f7f3eb;
+}
+
+.pe-frame.thumb{ aspect-ratio: 2 / 3; }
+.pe-frame.banner{ height: 160px; }
+
+.pe-frame .pe-img{
+  width: 100%; height: 100%;
+  display: block;
+  object-fit: contain;
+}
+.pe-frame.banner .pe-img{ object-fit: cover; }
+/* PAST ENTRIES — actions, scoped to the card */
+.pe-card .pe-actions{
+  position: absolute; left: 0; right: 0; bottom: 0;
+  display: flex; align-items: center; gap: 14px;
+  padding: 8px 10px;
+  pointer-events: auto;
+  /* a very soft fade with NO hard line */
+  background: linear-gradient(to top,
+              rgba(255,255,255,.88), rgba(255,255,255,.50) 55%, transparent);
+  border-top: 0 !important;          /* <-- removes the line */
+  box-shadow: none !important;
+}
+
+/* Order: Copy, Edit, Download, Trash */
+.pe-card .pe-actions .pe-copy     { order: 1; }
+.pe-card .pe-actions .pe-edit     { order: 2; }
+.pe-card .pe-actions .pe-download { order: 3; }
+.pe-card .pe-actions .pe-delete   { order: 4; }
+
+/* Link/icon look (no button chrome, no red) */
+.pe-card .pe-actions a,
+.pe-card .pe-actions button{
+  background: transparent; border: 0; padding: 0;
+  color: #2f4f4f; font-weight: 600; cursor: pointer;
+}
+.pe-card .pe-actions .icon{ font-size: 18px; line-height: 1; }
+.pe-card .pe-actions .pe-delete{ color: #6b6b6b; }
+.pe-card .pe-actions .pe-delete:hover{ color: #111; transform: translateY(-1px); }
+/* TODAY — always wrap inside the paper, regardless of component */
+.journal-canvas{ overflow: hidden !important; }
+
+.journal-overlay textarea,
+.journal-overlay [contenteditable="true"],
+.journal-overlay .journal-textarea{
+  position: absolute !important;
+  left: 7% !important; right: 7% !important;
+  top: calc(5% + 30px) !important; bottom: 8% !important;
+  background: transparent !important;
+  border: 0 !important; outline: 0 !important; resize: none !important;
+  margin: 0 !important; padding-right: 4px !important;
+  line-height: 1.6; font-size: clamp(14px,1.9vw,20px);
+
+  /* hard wrap rules so ultra-long tokens never overflow */
+  white-space: pre-wrap !important;
+  overflow: auto !important;
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
+  hyphens: auto;
+}
+/* --- ACTION BAR: Copy • Edit • Download • Trash (force order) --- */
+.pe-card .pe-actions .pe-copy{order:1 !important;}
+.pe-card .pe-actions .pe-edit{order:2 !important;}
+
+/* cover alternate classing: download + delete */
+.pe-card .pe-actions .pe-download,
+.pe-card .pe-actions [aria-label="Download"],
+.pe-card .pe-actions [title="Download"]{order:3 !important;}
+
+.pe-card .pe-actions .pe-delete,
+.pe-card .pe-actions [aria-label="Delete"],
+.pe-card .pe-actions [title="Delete"]{order:4 !important;}
+/* Make the surrounding card invisible so no side gutters appear */
+.pe-card{
+  padding: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+}
+
+/* The actual preview frame: full-width, thin border, no inner padding */
+.pe-frame.thumb,
+.pe-frame.banner{
+  width: 100% !important;
+  display: block !important;
+  position: relative;
+  overflow: hidden;
+  background: #f7f3eb;             /* paper tone under transparent centers */
+  border: 1px solid #eee;          /* very thin edge you asked for */
+  border-radius: 12px;
+  margin: 0 !important;
+}
+
+/* Image should fill the frame; keep borders even */
+.pe-frame.thumb{ aspect-ratio: 2 / 3; }
+.pe-frame.banner{ height: 160px; }
+.pe-frame .pe-img{ width:100%; height:100%; display:block; object-fit:contain; }
+.pe-frame.banner .pe-img{ object-fit:cover; }
+.journal-canvas{ overflow:hidden !important; }
+.journal-overlay textarea,
+.journal-overlay [contenteditable="true"],
+.journal-overlay .journal-textarea{
+  position:absolute !important;
+  left:7% !important; right:7% !important;
+  top:calc(5% + 30px) !important; bottom:8% !important;
+  background:transparent !important; border:0 !important; outline:0 !important;
+  resize:none !important; padding-right:4px !important;
+  line-height:1.6; font-size:clamp(14px,1.9vw,20px);
+  white-space:pre-wrap !important;
+  overflow:auto !important;
+  overflow-wrap:anywhere !important;
+  word-break:break-word !important;
+  hyphens:auto;
+}
+/* === PAST ENTRIES — remove side gutters on grid cards === */
+.pe-card{
+  position: relative !important;
+  padding: 0 !important;              /* no inner white band */
+  background: transparent !important; /* let frame be the visual box */
+  border: 0 !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+}
+
+/* The actual preview frame: full width, thin border, paper-tone bg */
+.pe-frame.thumb,
+.pe-frame.banner{
+  width: 100% !important;
+  display: block !important;
+  position: relative;
+  overflow: hidden;
+  background: #f7f3eb !important;     /* matches page’s “paper” tone */
+  border: 1px solid #eee;
+  border-radius: 12px;
+  margin: 0 !important;
+}
+
+/* Grid thumbnail = strict 2:3; List = banner height */
+.pe-frame.thumb{ aspect-ratio: 2 / 3; }
+.pe-frame.banner{ height: 160px; }
+
+/* Background image canvas */
+.pe-frame .pe-thumbCanvas{
+  position: absolute;
+  inset: 0;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;           /* even border for grid */
+}
+
+/* LIST VIEW: fill the banner like your good example */
+.pe-frame.banner .pe-thumbCanvas{ background-size: cover !important; }
+
+/* Date/snippet overlay (already positioned in JSX) stays */
+.pe-date--thumb{ pointer-events: none; }
+.pe-snippet--thumb{ pointer-events: none; }
+
+/* === ACTIONS — exact order & minimal look === */
+.pe-actions .pe-copy{ order: 1 !important; }
+.pe-actions .pe-edit{ order: 2 !important; }
+.pe-actions .pe-download,
+.pe-actions [aria-label="Download"]{ order: 3 !important; }
+.pe-actions .pe-delete,
+.pe-actions [aria-label="Delete"]{ order: 4 !important; }
+/* === GRID THUMBS: fill the frame (no side bars) === */
+.pe-frame.thumb .pe-thumbCanvas{
+  background-size: cover !important;   /* was contain */
+  background-position: center center !important;
+}
+
+/* If you also want the actual <img> variant to fill when used */
+.pe-frame.thumb .pe-img{
+  object-fit: cover !important;        /* fallback if an <img> is present */
+  object-position: center center !important;
+}
+
+/* Slightly smaller card so the new “full bleed” doesn't feel oversized */
+.pe-grid{
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)) !important;
+}
+
+/* === ACTIONS: centered & no underlines on text buttons === */
+.pe-actions{
+  justify-content: center !important;
+  gap: 16px !important;
+}
+.pe-actions .link-button{
+  text-decoration: none !important;    /* remove underline */
+}
+.pe-actions .link-button:hover{
+  text-decoration: none !important;
+  opacity: .85;
+}
+
+/* === ICONS: size + vertical alignment (esp. trash) === */
+.pe-actions .icon-button,
+.pe-actions .icon-only{
+  display: inline-flex;
+  align-items: center;                 /* centers vertically */
+  justify-content: center;
+  padding: 2px 4px;
+  line-height: 1;
+}
+
+.pe-actions .icon-button svg,
+.pe-actions .icon-only svg{
+  width: 22px;                         /* up from ~18 */
+  height: 22px;
+  transform: translateY(1px);          /* nudge down so it doesn’t “float” */
+}
+
+/* If your trash is using a font icon instead of SVG, cover that too */
+.pe-actions .pe-delete,
+.pe-actions [aria-label="Delete"]{
+  font-size: 22px !important;
+  line-height: 1 !important;
+}
+/* =========================
+   PAST ENTRIES — HARD OVERRIDES
+   ========================= */
+
+/* Kill any card chrome that makes side bands show */
+.pe-card{
+  padding:0 !important;
+  border:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  overflow:visible !important;
+}
+
+/* Frame geometry (no crop) */
+.pe-card .pe-frame.thumb{ aspect-ratio: 2 / 3 !important; }
+.pe-card .pe-frame.banner{ height:150px !important; } /* list row height */
+
+/* Image must never crop; center it */
+.pe-card .pe-frame.thumb .pe-img,
+.pe-card .pe-frame.banner .pe-img,
+.pe-modal__canvas > img{
+  width:100% !important;
+  height:100% !important;
+  display:block !important;
+  object-fit:contain !important;      /* prevents top/bottom being cut */
+  object-position:center !important;
+  background:transparent !important;
+}
+
+/* Optional micro-zoom to hide tiny transparent gutters baked into PNGs.
+   If you still see faint side bars, uncomment the next 4 lines. */
+/*
+.pe-card .pe-frame.thumb .pe-img,
+.pe-card .pe-frame.banner .pe-img{
+  transform:scale(1.012) translateZ(0) !important;
+  transform-origin:center !important;
+}
+*/
+
+/* Grid a bit denser */
+.pe-grid{
+  grid-template-columns: repeat(auto-fill, minmax(200px,1fr)) !important;
+  gap:12px !important;
+}
+
+/* Actions row: centered in grid, bottom-right in list */
+.pe-actions{
+  display:flex !important;
+  align-items:center !important;
+  gap:12px !important;
+  padding:8px 10px !important;
+  margin-top:8px !important;
+  border-top:0 !important;
+  background:transparent !important;
+}
+.pe-grid .pe-actions{ justify-content:center !important; }
+.pe-list .pe-actions{ justify-content:flex-end !important; }
+
+/* “Copy / Edit” without underline */
+.pe-actions a,
+.pe-actions button,
+.pe-actions .icon-button{
+  background:transparent !important;
+  border:0 !important;
+  padding:0 2px !important;
+  font:inherit !important;
+  color:#2f4f4f !important;
+  font-weight:600 !important;
+  text-decoration:none !important;
+}
+
+/* Icon sizing/baseline so the trash doesn’t “float” */
+.pe-actions .icon-button svg,
+.pe-actions .icon svg{
+  width:20px !important;
+  height:20px !important;
+  vertical-align:-2px !important;
+}
+.pe-actions .pe-delete svg{
+  width:22px !important;
+  height:22px !important;
+  vertical-align:-1px !important;
+}
+/* === PAST ENTRIES • GRID VIEW: shrink whole card + no side bars === */
+
+/* smaller columns → smaller cards (tune the min width if you want) */
+:root { --peThumbMin: 210px; }  /* try 200–220px to taste */
+
+.pe-grid{
+  grid-template-columns: repeat(auto-fill, minmax(var(--peThumbMin), 1fr)) !important;
+  gap: 16px !important;
+}
+
+/* make the card itself not add inner space */
+.pe-grid .pe-card{
+  width: 100% !important;
+  padding: 0 !important;               /* remove inner white band */
+  border-radius: 12px;
+}
+
+/* the preview frame must be the thing that sizes the thumbnail */
+.pe-grid .pe-frame.thumb{
+  width: 100% !important;
+  height: auto !important;
+  aspect-ratio: 2 / 3 !important;      /* page shape */
+  margin: 0 !important;
+  padding: 0 !important;               /* kill any inner rim that becomes “bars” */
+  border: 0 !important;                /* avoid an extra edge that looks like bars */
+  background: transparent !important;  /* don’t show a colored gutter behind PNGs */
+  overflow: hidden;
+  border-radius: 12px;
+}
+
+/* the image fills the frame without cropping */
+.pe-grid .pe-frame.thumb img,
+.pe-grid .pe-frame.thumb .pe-img,
+.pe-grid .pe-frame.thumb > canvas{
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+  object-fit: contain !important;      /* show full top & bottom */
+  object-position: center !important;
+  border-radius: inherit;
+}
+
+/* keep overlay padding proportional at the smaller size */
+.pe-overlay__inner{ padding: clamp(10px, 3.5%, 22px) !important; }
+.pe-date--thumb{ font-size: clamp(10px, 1.5vw, 12px) !important; }
+.pe-snippet--thumb{ font-size: clamp(10px, 1.5vw, 12px) !important; }
+/* Icon buttons with zero hover/focus chrome */
+.icon-nochrom e,
+.icon-nochrome:hover,
+.icon-nochrome:active,
+.icon-nochrome:focus,
+.icon-nochrome:focus-visible {
+  background: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* ensure the SVG itself isn’t adding extra box area */
+.icon-nochrome svg { display: block; }
+/* ===== Today page — Journal sizing & layout ===== */
+
+/* Make all sections a bit narrower and centered */
+.page-wrap .card,
+.page-wrap .journal-card,
+.page-wrap .customizer {
+  max-width: 900px;           /* tweak as you like (860–940 works well) */
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Remove any inner white edge around the paper */
+.journal-card {
+  padding: 0 !important;
+  background: transparent;
+}
+
+/* The paper frame: fixed aspect so overlay and image always match */
+.journal-canvas {
+  position: relative;
+  width: min(760px, 92vw);    /* overall width on desktop & phones */
+  aspect-ratio: 3 / 4;        /* tall page; change to 2/3 for even taller */
+  max-height: 82vh;           /* don’t exceed the viewport too much */
+  margin: 0 auto;
+  border-radius: 12px;
+  overflow: hidden;           /* hides any sub-pixel edges */
+  background: transparent;
+}
+
+/* Paper image fills the frame with no bars/borders */
+.journal-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;          /* edge-to-edge fill */
+  display: block;
+}
+
+/* Overlay (date + textarea) perfectly matches the paper area */
+.journal-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: auto;
+}
+
+/* Ensure the textarea never “escapes” the canvas */
+.journal-textarea {
+  box-sizing: border-box;
+  max-width: 100%;
+  max-height: 100%;
+}
+/* Journal canvas: create an isolated stacking context */
+.journal-canvas {
+  position: relative;
+  width: min(900px, 92vw);
+  aspect-ratio: 2 / 3;
+  margin: 0 auto;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #f7f3eb;
+  box-shadow: 0 8px 26px rgba(0,0,0,.08);
+  isolation: isolate;                 /* ← prevents sibling reflow/z-index weirdness */
+}
+
+/* Image layer */
+.journal-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  pointer-events: none;
+  user-select: none;
+  border-radius: 16px;
+  z-index: 0;                         /* ← behind overlay */
+  backface-visibility: hidden;
+}
+
+/* Overlay layer pinned over the image (no layout participation) */
+.journal-overlay {
+  position: absolute;                 /* ← was relative */
+  inset: 0;                           /* ← stretch to full canvas */
+  padding: 0;                         /* we’ll place children absolutely */
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  z-index: 1;                         /* ← above the image */
+  pointer-events: none;               /* children can re-enable */
+}
+/* Date pinned top-right inside paper margins */
+.journal-topline {
+  position: absolute;
+  top: 5%;
+  right: 7%;
+  left: 7%;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  border: none;
+  pointer-events: none;               /* purely display */
+  margin: 0;
+}
+
+.journal-date {
+  font-size: clamp(18px, 2.2vw, 26px);
+  font-weight: 700;
+}
+
+/* Editor area pinned with insets; scrolls INSIDE without changing layout */
+.journal-textarea {
+  position: absolute;
+  left: 7%;
+  right: 7%;
+  top: calc(5% + 34px);               /* sits below date */
+  bottom: 8%;
+
+  overflow: auto;                      /* scroll within center */
+  scrollbar-gutter: stable both-edges; /* ← reserve gutter so nothing shifts */
+  resize: none;
+
+  border: none !important;
+  outline: none !important;
+  background: transparent;
+
+  /* text behavior */
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  line-height: 1.6;
+
+  box-shadow: none !important;
+  margin: 0;                           /* kill any stray margins */
+  pointer-events: auto;                /* re-enable interaction */
+}
+
+/* Remove the old rules that cause the push/overlap */
+.journal-textarea:focus { outline: none !important; }
+/* DELETE these if still present anywhere: 
+   margin-top: 60px;
+   height: 78%;
+*/
+/* ==== JOURNAL TEXTAREA: final anti-white-bar fix ==== */
+.journal-textarea {
+  /* match the paper tone under the art so the gutter blends */
+  background-color: #f7f3eb !important;
+
+  /* reserve space for the vertical scrollbar so no image shift */
+  scrollbar-gutter: stable both-edges;
+
+  /* give text a little room so it never rides under the scrollbar */
+  padding-right: 16px;
+}
+
+/* cross-browser, make the scrollbar blend with the paper */
+/* Chrome/Edge/WebKit */
+.journal-textarea::-webkit-scrollbar {
+  width: 12px;
+}
+.journal-textarea::-webkit-scrollbar-track {
+  background: #f7f3eb;
+}
+.journal-textarea::-webkit-scrollbar-thumb {
+  background: #d9d1c6;         /* soft neutral to keep it subtle */
+  border-radius: 10px;
+  border: 3px solid #f7f3eb;    /* creates breathing room */
+}
+
+/* Firefox */
+.journal-textarea {
+  scrollbar-width: thin;
+  scrollbar-color: #d9d1c6 #f7f3eb;
+}
+/* === Journal: no white bar, keep art visible === */
+
+/* 1) transparent again (don’t cover the paper) */
+.journal-textarea{
+  background: transparent !important;
+  /* keep the content from jumping when the scrollbar appears */
+  scrollbar-gutter: stable both-edges;
+  padding-right: 16px;            /* keep text away from the thumb */
+  resize: vertical;
+}
+
+/* 2) draw a tiny fixed “gutter” on the far right that matches the paper,
+      so if a track peeks through it looks seamless */
+.journal-overlay{ position: relative; }
+.journal-overlay::after{
+  content:"";
+  position:absolute;
+  top:0; right:0;
+  width:16px;                     /* width of the reserved gutter */
+  height:100%;
+  background:#f7f3eb;             /* same as .journal-canvas background */
+  pointer-events:none;
+}
+
+/* 3) make sure the canvas uses the same tone behind transparent areas */
+.journal-canvas{
+  background:#f7f3eb;             /* paper tone */
+  contain: layout paint size;      /* prevents any layout nudge */
+}
+
+/* Optional: subtle, paper-colored scrollbar so it blends (no opacity) */
+.journal-textarea::-webkit-scrollbar{ width:12px; }
+.journal-textarea::-webkit-scrollbar-track{ background: transparent; }
+.journal-textarea::-webkit-scrollbar-thumb{
+  background:#d9d1c6; border-radius:10px; border:3px solid transparent;
+}
+.journal-textarea{ scrollbar-width:thin; scrollbar-color:#d9d1c6 transparent; }
+/* 1) Make the paper art always fill the canvas (no sliver on the right) */
+.journal-img{
+  object-fit: cover !important;   /* was: contain */
+  width: 102% !important;          /* tiny overscan so no edge shows */
+  left: -1% !important;            /* re-center after overscan */
+}
+
+/* 2) Keep the textarea width stable when it starts scrolling */
+.journal-textarea{
+  overflow: auto;                   /* ensure it's a scroll container */
+  scrollbar-gutter: stable both-edges;
+  background: transparent !important;
+  padding-right: 16px;              /* keep text off the thumb */
+}
+
+/* Nice, non-white scrollbars */
+.journal-textarea::-webkit-scrollbar{ width:12px; }
+.journal-textarea::-webkit-scrollbar-track{ background: transparent; }
+.journal-textarea::-webkit-scrollbar-thumb{
+  background: rgba(0,0,0,.22);
+  border-radius: 10px;
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+.journal-textarea{ scrollbar-width: thin; scrollbar-color: rgba(0,0,0,.22) transparent; }
+/* ==== Journal canvas: pin overlay to the paper (fix white bar/overlap) ==== */
+.journal-card { padding: 0; }
+
+.journal-canvas {
+  position: relative;
+  width: min(900px, 92vw);
+  aspect-ratio: 2 / 3;
+  margin: 0 auto;
+  background-color: #f7f3eb;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;   /* keep the full border visible */
+  border-radius: 16px;
+  box-shadow: 0 8px 26px rgba(0,0,0,.08);
+  overflow: hidden;           /* nothing can draw outside the paper */
+}
+
+/* overlay must cover the canvas and not add its own padding */
+.journal-overlay {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+
+/* date sits in the top-right inside the paper */
+.journal-date {
+  position: absolute;
+  top: 5%;
+  right: 7%;
+  font-weight: 700;
+  font-size: clamp(18px, 2.2vw, 26px);
+}
+
+/* writing area stays inside the open center of the paper */
+.journal-textarea {
+  position: absolute;
+  left: 7%;
+  right: 7%;
+  top: 16%;
+  bottom: 8%;
+  width: auto;                /* stop 100% overflow */
+  height: auto;               /* let insets control the box */
+  min-height: 0;
+  box-sizing: border-box;
+  border: none !important;
+  outline: none !important;
+  background: transparent;
+  resize: none;               /* prevent resizing past the paper edges */
+  overflow: auto;             /* scroll inside when text is long */
+  line-height: 1.6;
+}
+
+/* remove padding the overlay previously added */
+.journal-topline { display: none; }  /* date now absolutely positioned */
+/* ===== END PATCH — Past Entries (authoritative) ==================== */
+/* Grid / list containers */
+.pe-month {
+  max-width: 1050px;
+  margin: 18px auto 8px;
+  font-weight: 800;
+  color: #6b7f74;
+}
+.pe-grid {
+  max-width: 1050px;
+  margin: 0 auto 24px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+}
+.pe-list {
+  max-width: 1050px;
+  margin: 0 auto 24px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+/* Card shell */
+.pe-card {
+  background: #fff;
+  border: 1px solid #ebe7df;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0,0,0,.05);
+  overflow: hidden;
+}
+.pe-card.compact {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  align-items: stretch;
+}
+
+/* Frame: consistent 2:3 canvas for the preview image */
+.pe-frame.thumb,
+.pe-frame.banner {
+  position: relative;
+  overflow: hidden;
+  background: #fff9f1;
+}
+.pe-frame.thumb { aspect-ratio: 2 / 3; }
+.pe-frame.banner { aspect-ratio: 5 / 3; } /* used in list mode */
+
+.pe-thumbCanvas {
+  position: absolute;
+  inset: 0;
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  border-radius: inherit;
+}
+
+/* Date (top-right) + snippet (bottom-left) inside the preview */
+.pe-date--thumb,
+.pe-snippet--thumb {
+  position: absolute;
+  left: 7%;
+  right: 7%;
+  text-shadow: 0 1px 0 rgba(255,255,255,.65);
+}
+.pe-date--thumb {
+  top: 5%;
+  text-align: right;
+  font-weight: 800;
+  font-size: clamp(12px, 1.5vw, 18px);
+}
+.pe-snippet--thumb {
+  bottom: 8%;
+  font-weight: 700;
+  font-size: clamp(12px, 1.6vw, 18px);
+  max-height: 2.6em;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* Actions under card */
+.pe-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-top: 1px solid #f0ede6;
+}
+.link-button {
+  background: none;
+  border: none;
+  color: #3e6d5b;
+  font-weight: 700;
+  cursor: pointer;
+}
+.link-button:hover { text-decoration: underline; }
+
+.icon-button,
+.icon-only {
+  background: #fff;
+  border: 1px solid #e6e6e6;
+  border-radius: 10px;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.icon-only { border-radius: 50%; }
+.icon-button:hover,
+.icon-only:hover { transform: translateY(-1px); box-shadow: 0 2px 6px rgba(0,0,0,.08); }
+
+/* Empty state */
+.empty-cta {
+  max-width: 820px;
+  margin: 24px auto;
+  text-align: center;
+  background: #fff;
+  border: 1px solid #ebe7df;
+  border-radius: 14px;
+  padding: 18px 18px 20px;
+}
+.empty-cta__title { margin: 8px 0; }
+.empty-cta__btn {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #86a789;
+  color: #fff;
+  text-decoration: none;
+  font-weight: 800;
+}
+
+/* Undo snackbar */
+.undo-bar {
+  position: fixed;
+  left: 50%;
+  bottom: 22px;
+  transform: translateX(-50%);
+  background: #333;
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 10px;
+  box-shadow: 0 8px 22px rgba(0,0,0,.25);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 999;
+}
+.undo-btn {
+  background: #ffd166;
+  color: #222;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+/* Modal viewer/editor */
+.pe-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(22, 24, 25, .5);
+  display: grid;
+  place-items: center;
+  z-index: 999;
+}
+.pe-modal__panel {
+  width: min(1050px, 92vw);
+  max-height: 90vh;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 16px 40px rgba(0,0,0,.25);
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: auto 1fr;
+}
+.pe-modal__top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-bottom: 1px solid #eee;
+  background: #faf7f1;
+}
+.pe-modal__canvasWrap {
+  overflow: auto;
+  padding: 14px;
+}
+.pe-modal__canvas {
+  position: relative;
+  margin: 0 auto;
+  width: min(900px, 88vw);
+  aspect-ratio: 2 / 3;
+  background: #f7f3eb;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 26px rgba(0,0,0,.08);
+}
+.pe-modal__canvas img.pe-img,
+.pe-modal__canvas .pe-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: inherit;
+}
+.pe-img--blank { background: #f7f3eb; }
+
+.pe-editor-textarea.pe-body--full {
+  border: none;
+  outline: none;
+  resize: none;
+  background: transparent;
+}
+
+/* Swatches in editor */
+.swatch { border: 2px solid transparent; border-radius: 6px; }
+.swatch.selected { border-color: #86a789; }
+
+/* Dark mode variants */
+body.dark-mode .pe-card { background: #2a2b2e; border-color: #3c4043; box-shadow: 0 6px 18px rgba(0,0,0,.35); }
+body.dark-mode .pe-actions { border-top-color: #3c4043; }
+body.dark-mode .link-button { color: #a8d7c7; }
+body.dark-mode .icon-button,
+body.dark-mode .icon-only { background: #303134; border-color: #4a4d52; color: #fff; }
+body.dark-mode .empty-cta { background: #2a2b2e; border-color: #3c4043; }
+body.dark-mode .pe-modal__panel { background: #2a2b2e; }
+body.dark-mode .pe-modal__top { background: #303134; border-bottom-color: #3c4043; }

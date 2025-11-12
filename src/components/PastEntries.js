@@ -27,8 +27,6 @@ const monthLabel = (d) =>
 /* ------------------------------------------------------------------ */
 /* Font list + Colors (mirror JournalEntry.js)                         */
 /* ------------------------------------------------------------------ */
-
-// Sans / modern
 const FONT_OPTIONS = [
   { label: 'Inter (Sans)', value: 'Inter' },
   { label: 'Poppins (Sans)', value: 'Poppins' },
@@ -37,8 +35,6 @@ const FONT_OPTIONS = [
   { label: 'Josefin Sans (Sans)', value: 'Josefin Sans' },
   { label: 'Quicksand (Sans)', value: 'Quicksand' },
   { label: 'Nunito (Sans)', value: 'Nunito' },
-
-  // Serif / editorial
   { label: 'Merriweather (Serif)', value: 'Merriweather' },
   { label: 'Lora (Serif)', value: 'Lora' },
   { label: 'Playfair Display (Serif)', value: 'Playfair Display' },
@@ -46,8 +42,6 @@ const FONT_OPTIONS = [
   { label: 'Cinzel', value: 'Cinzel' },
   { label: 'Libre Baskerville', value: 'Libre Baskerville' },
   { label: 'Crimson Pro', value: 'Crimson Pro' },
-
-  // Handwritten / Display
   { label: 'Caveat (Handwritten)', value: 'Caveat' },
   { label: 'Patrick Hand (Hand)', value: 'Patrick Hand' },
   { label: 'Handlee (Hand)', value: 'Handlee' },
@@ -55,8 +49,6 @@ const FONT_OPTIONS = [
   { label: 'Shadows Into Light', value: 'Shadows Into Light' },
   { label: 'Great Vibes (Script)', value: 'Great Vibes' },
   { label: 'Sacramento (Script)', value: 'Sacramento' },
-
-  // Monospace
   { label: 'Courier Prime (Mono)', value: 'Courier Prime' },
 ];
 
@@ -73,9 +65,7 @@ const COLORS = [
   '#F5AFC6', '#E9D5FF', '#C7D2FE', '#A7F3D0', '#D1FAE5', '#FDE68A', '#FECACA', '#BBD7C5',
 ];
 
-/* ------------------------------------------------------------------ */
-/* Safe text/date areas (match Today page geometry)                    */
-/* ------------------------------------------------------------------ */
+/* Safe text/date areas (match Today page geometry) */
 const SAFE = {
   left: '7%',
   right: '7%',
@@ -84,7 +74,7 @@ const SAFE = {
   bottom: '8%',
 };
 
-/* Small download icon */
+/* Download & Trash icons */
 const DownloadIcon = ({ size = 18 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
     <path
@@ -94,8 +84,16 @@ const DownloadIcon = ({ size = 18 }) => (
     />
   </svg>
 );
+const TrashIcon = ({ size = 18 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M3 6h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+    <path d="M8 6l.7-1.4A2 2 0 0 1 10.4 3h3.2a2 2 0 0 1 1.7.6L16 6" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round"/>
+    <rect x="6" y="6" width="12" height="14" rx="2" ry="2" stroke="currentColor" strokeWidth="2" fill="none"/>
+    <path d="M10 10v7M14 10v7" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+  </svg>
+);
 
-/* For raw restore (only used if needed; optimistic delete should avoid this) */
+/* Raw restore (if ever needed) */
 const RAW_ENTRIES_KEY = 'dearself.entries';
 const restoreEntryRaw = (entry) => {
   try {
@@ -111,17 +109,111 @@ const restoreEntryRaw = (entry) => {
 };
 
 /* ------------------------------------------------------------------ */
+/* Pagination helpers                                                  */
+/* ------------------------------------------------------------------ */
+const PAGE_SIZE_KEY = 'pastEntries.pageSize';
+const PAGE_SIZE_OPTIONS = [12, 24, 50, 75, 100];
+
+/** Compact, windowed numeric pager */
+function Pager({ page, setPage, totalPages, totalItems, pageSize, setPageSize }) {
+  if (totalPages <= 1) return null;
+
+  const go = (p) => setPage(Math.max(1, Math.min(totalPages, p)));
+
+  const windowSize = 5;
+  const start = Math.max(1, page - Math.floor(windowSize / 2));
+  const end = Math.min(totalPages, start + windowSize - 1);
+  const pages = [];
+  for (let p = start; p <= end; p++) pages.push(p);
+
+  const btn = {
+    minWidth: 34, height: 34, borderRadius: 8,
+    border: '1px solid #e5e7eb', background: '#fff',
+    cursor: 'pointer', fontWeight: 700, padding: '0 8px'
+  };
+  const btnDisabled = { opacity: .45, cursor: 'default' };
+  const active = { background: '#eaf3ec', borderColor: '#cfe5d8' };
+
+  return (
+    <nav style={{
+      maxWidth: 1050, margin: '16px auto 8px',
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <button style={{ ...btn }} disabled={page === 1} onClick={() => go(1)} aria-label="First">{'«'}</button>
+        <button style={{ ...btn, ...(page === 1 ? btnDisabled : {}) }} disabled={page === 1} onClick={() => go(page - 1)} aria-label="Previous">{'‹'}</button>
+
+        {start > 1 && (
+          <>
+            <button style={btn} onClick={() => go(1)}>1</button>
+            <span style={{ padding: '0 4px', color: '#888' }}>…</span>
+          </>
+        )}
+        {pages.map((p) => (
+          <button
+            key={p}
+            style={{ ...btn, ...(p === page ? active : {}) }}
+            onClick={() => go(p)}
+            aria-current={p === page ? 'page' : undefined}
+          >
+            {p}
+          </button>
+        ))}
+        {end < totalPages && (
+          <>
+            <span style={{ padding: '0 4px', color: '#888' }}>…</span>
+            <button style={btn} onClick={() => go(totalPages)}>{totalPages}</button>
+          </>
+        )}
+
+        <button style={{ ...btn, ...(page === totalPages ? btnDisabled : {}) }} disabled={page === totalPages} onClick={() => go(page + 1)} aria-label="Next">{'›'}</button>
+        <button style={{ ...btn }} disabled={page === totalPages} onClick={() => go(totalPages)} aria-label="Last">{'»'}</button>
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <span style={{ color: '#6b7280' }}>
+          {totalItems.toLocaleString()} entries • page {page} of {totalPages}
+        </span>
+        <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontWeight: 600 }}>
+          <span>Per page</span>
+          <select
+            value={pageSize}
+            onChange={(e) => setPageSize(parseInt(e.target.value, 10))}
+            style={{ height: 36, border: '1px solid #e5e7eb', borderRadius: 10, padding: '0 10px', background: '#fff' }}
+          >
+            {PAGE_SIZE_OPTIONS.map((n) => (
+              <option key={n} value={n}>{n}</option>
+            ))}
+          </select>
+        </label>
+      </div>
+    </nav>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /* Component                                                           */
 /* ------------------------------------------------------------------ */
 export default function PastEntries() {
+  // Pagination / filters / view
   const [query, setQuery] = useState('');
   const [date, setDate] = useState('');
   const [sort, setSort] = useState('Newest');
   const [themeFilter, setThemeFilter] = useState('all');
   const [items, setItems] = useState(() => listEntries());
   const [view, setView] = useState('grid'); // grid | list
+
+  // Pagination
   const [page, setPage] = useState(1);
-  const pageSize = 10;
+  const [pageSize, setPageSizeState] = useState(() => {
+    const saved = Number(localStorage.getItem(PAGE_SIZE_KEY));
+    return PAGE_SIZE_OPTIONS.includes(saved) ? saved : 12; // default 12
+  });
+  const setPageSize = (n) => {
+    setPageSizeState(n);
+    localStorage.setItem(PAGE_SIZE_KEY, String(n));
+    setPage(1);
+  };
 
   // Snackbar for delete message
   const [undo, setUndo] = useState(null); // { entry, timeout }
@@ -138,6 +230,9 @@ export default function PastEntries() {
     window.addEventListener('storage', onStorage);
     return () => window.removeEventListener('storage', onStorage);
   }, []);
+
+  // Whenever view or sort changes, reset to page 1
+  useEffect(() => { setPage(1); }, [view, sort]);
 
   /* --------- Filter/Sort --------- */
   const filtered = useMemo(() => {
@@ -186,11 +281,16 @@ export default function PastEntries() {
     ? filtered.filter((e) => e.id !== pendingDelete.id)
     : filtered;
 
-  const pageList = visible.slice(0, page * pageSize);
+  // ---- Real pagination slice (numeric pages) ----
+  const total = visible.length;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const safePage = Math.min(page, totalPages);
+  const startIdx = (safePage - 1) * pageSize;
+  const pageSlice = visible.slice(startIdx, startIdx + pageSize);
 
   const grouped = useMemo(() => {
     const map = new Map();
-    pageList.forEach((e) => {
+    pageSlice.forEach((e) => {
       const d = new Date(e.iso);
       const mk = monthKey(d);
       if (!map.has(mk)) map.set(mk, { label: monthLabel(d), entries: [] });
@@ -199,7 +299,7 @@ export default function PastEntries() {
     return Array.from(map.entries())
       .sort((a, b) => (a[0] < b[0] ? 1 : -1))
       .map(([, v]) => v);
-  }, [pageList]);
+  }, [pageSlice]);
 
   /* --------- Delete / Undo (Optimistic) --------- */
   const onDelete = (id) => {
@@ -213,28 +313,26 @@ export default function PastEntries() {
     const entry = items.find((i) => i.id === id);
     if (!entry) return;
 
-    // start optimistic flow: hide now; commit after 7s
+    // start optimistic flow: hide now; commit after prefs.undoMs (default 4000)
+    const undoMs = Number(JSON.parse(localStorage.getItem('dearself.prefs') || '{}')?.undoMs ?? 4000);
     const timeoutId = setTimeout(() => {
       removeEntry(id);
       setItems(listEntries());
       setPendingDelete(null);
       setUndo(null);
-    }, 7000);
+    }, undoMs);
 
     setPendingDelete({ id, entry, timeoutId });
 
     if (undo?.timeout) clearTimeout(undo.timeout);
-    const uiTimeout = setTimeout(() => setUndo(null), 7000);
+    const uiTimeout = setTimeout(() => setUndo(null), undoMs);
     setUndo({ entry, timeout: uiTimeout });
   };
 
   const undoDelete = () => {
     if (!pendingDelete) return;
-
     if (pendingDelete.timeoutId) clearTimeout(pendingDelete.timeoutId);
     if (undo?.timeout) clearTimeout(undo.timeout);
-
-    // Nothing was removed yet—just restore the view
     setPendingDelete(null);
     setUndo(null);
   };
@@ -251,22 +349,29 @@ export default function PastEntries() {
       _work: {
         fontFamily: s.fontFamily || 'Inter',
         fontColor: s.fontColor ?? '#2B2B2B',
-        keepColor: true, // default to keep current color
+        keepColor: true,
       },
     });
   };
   const closeEditor = () => setEditing(null);
 
+  // Save: when changing font color, also set dateColor (the requested fix)
   const saveEditor = () => {
     if (!editing) return;
     const chosen = editing._work.keepColor ? '__KEEP__' : editing._work.fontColor;
+    const nextFontColor =
+      chosen === '__KEEP__' ? (editing.style?.fontColor || '#2B2B2B') : chosen;
+
     const patch = {
       content: editing._text,
       style: {
         ...(editing.style || {}),
         fontFamily: editing._work.fontFamily,
-        fontColor:
-          chosen === '__KEEP__' ? editing.style?.fontColor || '#2B2B2B' : chosen,
+        fontColor: nextFontColor,
+        dateColor:
+          chosen === '__KEEP__'
+            ? (editing.style?.dateColor ?? editing.style?.fontColor ?? '#2B2B2B')
+            : chosen, // keep date in sync with selected font color
       },
     };
     updateEntry(editing.id, patch);
@@ -313,12 +418,7 @@ export default function PastEntries() {
           font-weight:${s.bold ? 700 : 400};
           font-style:${s.italic ? 'italic' : 'normal'};
           font-size:${Number(s.fontSize) || 20}px;
-          line-height:1.6;
-          white-space:pre-wrap;
-          text-align:left;
-          overflow:auto;
-          overflow-wrap:anywhere;
-          word-break:break-word;">
+          line-height:1.6;white-space:pre-wrap;overflow:auto;overflow-wrap:anywhere;word-break:break-word;">
           ${String(e.content || '')
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
@@ -361,22 +461,19 @@ export default function PastEntries() {
           onClick={() => openViewer(e)}
           title="Open"
         >
-          {s.imageSrc ? <img className="pe-img" src={s.imageSrc} alt="" /> : <div className="pe-img pe-img--blank" />}
-
+          {/* strict 2:3 canvas with background-image to keep borders even */}
+          <div
+            className="pe-thumbCanvas"
+            style={{
+              backgroundImage: s.imageSrc ? `url("${s.imageSrc}")` : 'none',
+            }}
+          />
           {/* Date (top-right) */}
           <div
+            className="pe-date--thumb"
             style={{
-              position: 'absolute',
-              top: '6%',
-              right: '7%',
-              left: '7%',
               fontFamily: fam,
               color: dateColor,
-              fontWeight: 700,
-              fontSize: compact ? 12 : 14,
-              textAlign: 'right',
-              textShadow: '0 1px 0 rgba(255,255,255,.6)',
-              pointerEvents: 'none',
             }}
           >
             {d.toLocaleDateString(undefined, {
@@ -389,38 +486,45 @@ export default function PastEntries() {
 
           {/* First line (below, left) */}
           <div
+            className="pe-snippet--thumb"
             style={{
-              position: 'absolute',
-              left: '7%',
-              right: '7%',
-              top: compact ? 'calc(6% + 14px)' : 'calc(6% + 18px)',
               fontFamily: fam,
               color,
               fontWeight: s.bold ? 700 : 600,
               fontStyle: s.italic ? 'italic' : 'normal',
-              fontSize: compact ? 12 : 13,
-              lineHeight: 1.4,
-              textAlign: 'left',
-              textShadow: '0 1px 0 rgba(255,255,255,.6)',
-              pointerEvents: 'none',
-              overflow: 'hidden',
-              whiteSpace: 'nowrap',
-              textOverflow: 'ellipsis',
             }}
           >
             {firstLine}
           </div>
         </div>
 
+        {/* Actions: Copy • Edit • Download • Trash */}
         <div className="pe-actions">
-          <button className="link-button" onClick={() => navigator.clipboard.writeText(String(e.content || ''))}>
-            Copy text
+          <button
+            className="link-button pe-copy"
+            onClick={() => navigator.clipboard.writeText(String(e.content || ''))}
+          >
+            Copy
           </button>
-          <button className="link-button" onClick={() => downloadPNG(e)} title="Download PNG" aria-label="Download PNG">
+          <button className="link-button pe-edit" onClick={() => openEditor(e)}>
+            Edit
+          </button>
+          <button
+            className="icon-button pe-download"
+            onClick={() => downloadPNG(e)}
+            title="Download"
+            aria-label="Download"
+          >
             <DownloadIcon />
           </button>
-          <button className="link-button" onClick={() => openEditor(e)}>Edit</button>
-          <button className="btn-danger" onClick={() => onDelete(e.id)}>Delete</button>
+          <button
+            className="icon-only pe-delete"
+            onClick={() => onDelete(e.id)}
+            title="Delete"
+            aria-label="Delete"
+          >
+            <TrashIcon />
+          </button>
         </div>
       </div>
     );
@@ -438,7 +542,7 @@ export default function PastEntries() {
         <div style={{ textAlign: 'center', marginTop: -8, color: '#a98b94' }}>Little by little, day by day.</div>
 
         {/* Controls */}
-        <div className="row gap" style={{ margin: '12px 0 10px' }}>
+        <div className="row gap" style={{ margin: '12px 0 10px', alignItems: 'center' }}>
           <input
             placeholder="Search entries..."
             value={query}
@@ -495,20 +599,37 @@ export default function PastEntries() {
             className="pill"
             style={{ marginLeft: 'auto' }}
           >
-            {view === 'grid' ? '📋 List View' : '🗂 Grid View'}
+            {view === 'grid' ? 'List View' : 'Grid View'}
           </button>
+
+          {/* Per-page selector (top-right) */}
+          <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontWeight: 700 }}>
+            <span>Per page</span>
+            <select
+              value={pageSize}
+              onChange={(e) => setPageSize(parseInt(e.target.value, 10))}
+              style={{ height: 36, border: '1px solid #e5e7eb', borderRadius: 10, padding: '0 10px', background: '#fff' }}
+            >
+              {PAGE_SIZE_OPTIONS.map((n) => (
+                <option key={n} value={n}>{n}</option>
+              ))}
+            </select>
+          </label>
         </div>
-        <div className="empty-cta empty-cta--tricolor">
-  <h3 className="empty-cta__title">No entries yet</h3>
-  <p className="empty-cta__line">
-    Your journal is waiting. Little by little starts today—reflect on your challenge,
-    your feelings, or what your heart is ready to say.
-  </p>
-  <a className="empty-cta__btn empty-cta__btn--tri" href="/">✍️ Head to Today</a>
-</div>
 
+        {/* Empty state */}
+        {visible.length === 0 && (
+          <div className="empty-cta empty-cta--tricolor">
+            <h3 className="empty-cta__title">No entries yet</h3>
+            <p className="empty-cta__line">
+              Your journal is waiting. Little by little starts today—reflect on your challenge,
+              your feelings, or what your heart is ready to say.
+            </p>
+            <a className="empty-cta__btn empty-cta__btn--tri empty-cta__plain" href="/">✍️ Head to Today</a>
+          </div>
+        )}
 
-        {/* Grouped months */}
+        {/* Grouped months for THIS PAGE ONLY */}
         {grouped.map((group) => (
           <div key={group.label}>
             <h2 className="pe-month" data-themed="1">{group.label}</h2>
@@ -520,11 +641,15 @@ export default function PastEntries() {
           </div>
         ))}
 
-        {page * pageSize < visible.length && (
-          <div className="row end" style={{ marginTop: 16 }}>
-            <button className="primary" onClick={() => setPage((p) => p + 1)}>Show more</button>
-          </div>
-        )}
+        {/* Bottom pager */}
+        <Pager
+          page={safePage}
+          setPage={setPage}
+          totalPages={totalPages}
+          totalItems={total}
+          pageSize={pageSize}
+          setPageSize={setPageSize}
+        />
       </section>
 
       {/* Undo snackbar */}
@@ -613,36 +738,35 @@ export default function PastEntries() {
                 Keep current color
               </label>
 
-              {/* Compact, vertical color picker when NOT keeping color */}
+              {/* Compact horizontal color picker when NOT keeping color */}
               {!editing._work.keepColor && (
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                   <span style={{ fontWeight: 700 }}>Font Color</span>
                   <div
-  style={{
-    display: 'flex',
-    flexWrap: 'nowrap',        // single horizontal row
-    gap: 6,
-    maxWidth: 'min(560px, 48vw)',
-    overflowX: 'auto',         // sideways scroll if it overflows
-    overflowY: 'hidden',
-    padding: '6px 8px',
-    border: '1px solid #e5e7eb',
-    borderRadius: 8,
-  }}
->
-  {COLORS.map((c) => (
-    <button
-      key={c}
-      type="button"
-      className={`swatch ${editing._work.fontColor === c ? 'selected' : ''}`}
-      onClick={() => setEditing((ed) => ({ ...ed, _work: { ...ed._work, fontColor: c } }))}
-      style={{ background: c, width: 24, height: 24, flex: '0 0 auto' }}
-      aria-label={`Select color ${c}`}
-      title={c}
-    />
-  ))}
-</div>
-
+                    style={{
+                      display: 'flex',
+                      flexWrap: 'nowrap',
+                      gap: 6,
+                      maxWidth: 'min(560px, 48vw)',
+                      overflowX: 'auto',
+                      overflowY: 'hidden',
+                      padding: '6px 8px',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: 8,
+                    }}
+                  >
+                    {COLORS.map((c) => (
+                      <button
+                        key={c}
+                        type="button"
+                        className={`swatch ${editing._work.fontColor === c ? 'selected' : ''}`}
+                        onClick={() => setEditing((ed) => ({ ...ed, _work: { ...ed._work, fontColor: c } }))}
+                        style={{ background: c, width: 24, height: 24, flex: '0 0 auto' }}
+                        aria-label={`Select color ${c}`}
+                        title={c}
+                      />
+                    ))}
+                  </div>
                 </div>
               )}
 
@@ -656,12 +780,14 @@ export default function PastEntries() {
               <div className="pe-modal__canvas" style={{ position: 'relative' }}>
                 {editing.style?.imageSrc ? <img src={editing.style.imageSrc} alt="" /> : <div className="pe-img pe-img--blank" />}
 
-                {/* Date */}
+                {/* LIVE date preview uses the same color as the body when keepColor=false */}
                 <div
                   style={{
                     position: 'absolute',
                     left: SAFE.left, right: SAFE.right, top: '5%',
-                    color: editing.style?.dateColor || editing.style?.fontColor || '#2B2B2B',
+                    color: editing._work.keepColor
+                      ? (editing.style?.dateColor || editing.style?.fontColor || '#2B2B2B')
+                      : editing._work.fontColor,
                     fontFamily: editing._work.fontFamily,
                     fontWeight: 700, fontSize: 22, lineHeight: 1.25, textAlign: 'right',
                   }}
@@ -673,7 +799,7 @@ export default function PastEntries() {
 
                 {/* Editable body */}
                 <textarea
-                  className="pe-editor-textarea"
+                  className="pe-editor-textarea pe-body--full"
                   value={editing._text}
                   onChange={(e) => setEditing((ed) => ({ ...ed, _text: e.target.value }))}
                   placeholder="Write to yourself…"
@@ -683,7 +809,9 @@ export default function PastEntries() {
                     resize: 'none', border: 'none', outline: 'none', background: 'transparent',
                     overflow: 'auto', overflowWrap: 'anywhere', wordBreak: 'break-word', boxSizing: 'border-box',
                     fontFamily: editing._work.fontFamily,
-                    color: editing._work.keepColor ? (editing.style?.fontColor || '#2B2B2B') : editing._work.fontColor,
+                    color: editing._work.keepColor
+                      ? (editing.style?.fontColor || '#2B2B2B')
+                      : editing._work.fontColor,
                     fontWeight: editing.style?.bold ? 700 : 400,
                     fontStyle: editing.style?.italic ? 'italic' : 'normal',
                     fontSize: (Number(editing.style?.fontSize) || 18) + 'px',

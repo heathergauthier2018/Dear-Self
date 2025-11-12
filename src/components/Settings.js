@@ -126,22 +126,19 @@ export default function Settings() {
               </label>
 
               <label className="field" style={{ minWidth: 180 }}>
-  <span>Texture</span>
-  <select
-  value={prefs.bgTexture}
-  onChange={e => save({ bgTexture: e.target.value })}
->
-  <option value="none">None</option>
-  <option value="diagonal">Diagonal</option>
-  <option value="dots">Soft Dots</option>
-  <option value="grid">Grid</option>
-  <option value="linen">Linen</option>
-  <option value="plaid">Plaid</option>
-</select>
-
-
-</label>
-
+                <span>Texture</span>
+                <select
+                  value={prefs.bgTexture}
+                  onChange={e => save({ bgTexture: e.target.value })}
+                >
+                  <option value="none">None</option>
+                  <option value="diagonal">Diagonal</option>
+                  <option value="dots">Soft Dots</option>
+                  <option value="grid">Grid</option>
+                  <option value="linen">Linen</option>
+                  <option value="plaid">Plaid</option>
+                </select>
+              </label>
 
               <label className="field" style={{ minWidth: 200 }}>
                 <span>Page Width</span>
@@ -190,7 +187,6 @@ export default function Settings() {
           <fieldset className="fav-card" style={{ background: '#fff' }}>
             <legend><strong>Navigation & Layout</strong></legend>
 
-            {/* Removed: Default landing page + Tabs visibility */}
             <div>
               <span style={{ fontWeight: 700, display: 'block', marginBottom: 6 }}>Tabs order</span>
               <div style={{ display: 'grid', gap: 8 }}>
@@ -232,18 +228,6 @@ export default function Settings() {
                 />
                 Show category chip
               </label>
-
-              <label className="pill" style={{ cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={prefs.confirmRegenerate}
-                  onChange={e => save({ confirmRegenerate: e.target.checked })}
-                  style={{ marginRight: 8 }}
-                />
-                Confirm before regenerate
-              </label>
-
-              {/* Removed: Heart style control; we use emoji by default */}
             </div>
           </fieldset>
 
@@ -261,17 +245,6 @@ export default function Settings() {
                 </select>
               </label>
 
-              <label className="field" style={{ minWidth: 180 }}>
-                <span>Week starts on</span>
-                <select
-                  value={prefs.weekStart}
-                  onChange={e => save({ weekStart: Number(e.target.value) })}
-                >
-                  <option value={0}>Sunday</option>
-                  <option value={1}>Monday</option>
-                </select>
-              </label>
-
               <label className="field" style={{ minWidth: 220 }}>
                 <span>Default range</span>
                 <select
@@ -283,36 +256,6 @@ export default function Settings() {
                   <option value="7d">Last 7 days</option>
                 </select>
               </label>
-            </div>
-          </fieldset>
-
-          {/* Locale, Time & Feedback */}
-          <fieldset className="fav-card" style={{ background: '#fff' }}>
-            <legend><strong>Locale, Time & Feedback</strong></legend>
-            <div className="row" style={{ gap: 16, alignItems: 'center' }}>
-              <label className="field" style={{ minWidth: 260 }}>
-                <span>Time zone</span>
-                <select
-                  value={prefs.timeZone}
-                  onChange={e => save({ timeZone: e.target.value })}
-                >
-                  {TIMEZONES.map(tz => <option key={tz} value={tz}>{tz}</option>)}
-                </select>
-              </label>
-
-              <label className="field" style={{ minWidth: 200 }}>
-                <span>Undo duration</span>
-                <select
-                  value={String(prefs.undoMs)}
-                  onChange={e => save({ undoMs: Number(e.target.value) })}
-                >
-                  <option value="4000">4 seconds</option>
-                  <option value="7000">7 seconds</option>
-                  <option value="10000">10 seconds</option>
-                </select>
-              </label>
-
-              
             </div>
           </fieldset>
 

@@ -1320,3 +1320,214 @@ main {
 :root {
   --journal-text: #2E2E2E;
 }
+/* === Fit the entire journal page on screen (no scroll) === */
+.journal-card {
+  background: #fff9f1;
+  padding: 10px 8px;          /* smaller chrome so more room for the canvas */
+}
+
+.journal-canvas {
+  position: relative;
+  aspect-ratio: 2 / 3;        /* width : height */
+  height: clamp(520px, 62vh, 680px);  /* ← this is the key: size by viewport height */
+  width: auto;                /* computed from aspect-ratio + height */
+  margin: 0 auto;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* Paper image scales to the canvas */
+.journal-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Overlay + safe areas stay the same */
+.journal-overlay { position: absolute; inset: 0; }
+
+.journal-date {
+  font-size: clamp(14px, 1.9vw, 20px);
+  text-shadow: 0 1px 0 rgba(255,255,255,.6);
+}
+
+/* Text area scrolls INSIDE the page, not the window */
+.journal-textarea {
+  position: absolute;
+  left: 7%;
+  right: 7%;
+  top: calc(5% + 26px);
+  bottom: 8%;
+  background: transparent;
+  border: none;
+  outline: none;
+  resize: none;
+  overflow: auto;
+  white-space: pre-wrap;
+  line-height: 1.6;
+  /* keep typography responsive but readable */
+  font-size: clamp(14px, 1.9vw, 20px);
+}
+
+/* Optional: tighten the heading space above the canvas */
+.brand-subtitle {
+  margin-top: 6px;
+  margin-bottom: 8px;
+}
+/* =========================
+   Central column + tighter cards
+   ========================= */
+.page-wrap {
+  max-width: 980px;              /* narrower overall layout */
+  margin: 0 auto;
+  padding-inline: 14px;
+}
+
+.card,
+.journal-card,
+.customizer {
+  max-width: 980px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* =========================
+   Journal canvas sizing
+   - keep full page visible (no window scroll)
+   - center the page
+   ========================= */
+.journal-card {
+  background: #fff9f1;
+  padding: 10px 8px;
+  border-radius: 14px;
+}
+
+.journal-canvas {
+  /* page-shaped area */
+  position: relative;
+  aspect-ratio: 2 / 3;            /* width : height of the paper */
+  height: clamp(520px, 58vh, 640px);   /* size by viewport height */
+  width: auto;                     /* width derives from aspect ratio */
+  margin: 0 auto;                  /* center inside the card */
+  border-radius: 12px;
+  overflow: hidden;
+  background: transparent;         /* no beige side banding */
+}
+
+/* The paper image always fills the canvas */
+.journal-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+/* Make sure overlay is pinned to the canvas, not the card */
+.journal-overlay {
+  position: absolute;              /* key: position against .journal-canvas */
+  inset: 0;                        /* exactly on top of the paper */
+}
+
+/* Date line on the page */
+.journal-date {
+  position: absolute;
+  top: 5%;
+  right: 7%;
+  left: 7%;
+  text-align: right;
+  font-size: clamp(14px, 1.9vw, 20px);
+  text-shadow: 0 1px 0 rgba(255,255,255,.6);
+}
+
+/* Text area lives *inside* the page, never in the gutter */
+.journal-textarea {
+  position: absolute;              /* <- ensures it’s constrained to the canvas */
+  left: 7%;
+  right: 7%;
+  top: calc(5% + 28px);
+  bottom: 8%;
+
+  background: transparent;
+  border: none;
+  outline: none;
+  resize: none;
+
+  overflow: auto;                  /* long entries scroll inside the page */
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.6;
+
+  font-size: clamp(14px, 1.9vw, 20px);
+}
+
+/* Slightly tighter spacing above the page */
+.brand-subtitle {
+  margin-top: 6px;
+  margin-bottom: 8px;
+}
+/* === Today page: keep long entries inside the paper & scroll within === */
+.journal-canvas { position: relative; }
+
+.journal-img{
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.journal-textarea{
+  position: absolute;
+  left: 7%;
+  right: 7%;
+  top: calc(5% + 28px); /* below the date */
+  bottom: 8%;
+  box-sizing: border-box;
+  padding: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  resize: none;
+  overflow: auto;              /* scrolls inside the page */
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.6;
+  font-size: clamp(14px, 1.9vw, 20px);
+}
+/* ===== Streak badge ===== */
+.streak-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #fff7ed;              /* soft peach */
+  color: #9a5a1a;                   /* warm brown/orange */
+  border: 1px solid #f4e2c7;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.streak-badge.pill-small { padding: 4px 10px; font-size: .95rem; }
+.streak-badge .flame { display: inline-block; transform-origin: center; }
+
+/* one-shot bump on increase */
+.streak-badge.pop { animation: badgePop .55s ease; }
+@keyframes badgePop {
+  0%   { transform: scale(.92); }
+  40%  { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+
+/* dark mode look */
+body.dark-mode .streak-badge {
+  background: #3a2f22;
+  color: #ffd79b;
+  border-color: #5b4633;
+}
