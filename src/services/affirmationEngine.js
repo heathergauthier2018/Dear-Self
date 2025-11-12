@@ -1,263 +1,322 @@
 // src/services/affirmationEngine.js
 
-// ---- Default journal look (first-run seeding) -----------------------------
-import romantic2 from '../images/romantic2.png';
-
-// Local storage keys
-const PREFS_KEY = 'dearself.userprefs.v1';
-const FAV_KEY   = 'dearself.favorites.v1';
-const TODAY_KEY = 'dearself.today.v1';
-const ENTRY_KEY = 'dearself.entries.v2'; // versioned shape for style-aware entries
-
-// Default canvas style + site prefs (used on first run)
-export const DEFAULT_STYLE = {
-  themeKey: 'romantic2',
-  imageSrc: romantic2,
-  fontFamily: 'Merriweather',
-  fontColor: '#2B2B2B',
-  dateColor: '#2B2B2B',
-  bold: false,
-  italic: false,
-  fontSize: 18,
+/* ------------------------------------------------------------------ */
+/* Storage keys                                                       */
+/* ------------------------------------------------------------------ */
+const KEYS = {
+  prefs: 'dearself.userprefs',
+  entries: 'dearself.entries',
+  today: 'dearself.today',
+  favorites: 'dearself.favorites',
 };
 
-export const DEFAULT_PREFS = {
-  // optional site-wide flavor (matches your theme.css choices)
-  headerFont: 'header-merriweather',
-  bgTexture: 'linen',
-  theme: 'sage',
-  motion: 'standard',
-  cardDensity: 'cozy',
+/* ------------------------------------------------------------------ */
+/* Public images helper (served from /public/images)                  */
+/* ------------------------------------------------------------------ */
+export const DEFAULT_PAPER_KEY = 'romantic2';
+const PUBLIC = process.env.PUBLIC_URL || '';
+export const imageUrl = (name) => `${PUBLIC}/images/${name}`;
 
-  // used by JournalEntry as the initial paper choice
-  selectedPaperKey: 'romantic2',
-
-  // the journal canvas look for first run
-  journalStyle: DEFAULT_STYLE,
-};
-
-/* =========================
-   User Preferences (merge-safe, seeds defaults)
-   ========================= */
-export function getUserPrefs() {
-  try {
-    const raw = JSON.parse(localStorage.getItem(PREFS_KEY) || '{}');
-
-    // Merge with defaults so missing fields never break rendering
-    const merged = {
-      ...DEFAULT_PREFS,
-      ...raw,
-      journalStyle: {
-        ...DEFAULT_STYLE,
-        ...(raw.journalStyle || raw.style || {}),
-      },
-      // prefer explicit selectedPaperKey if present; else take from style
-      selectedPaperKey:
-        raw.selectedPaperKey ||
-        (raw.journalStyle && raw.journalStyle.themeKey) ||
-        DEFAULT_PREFS.selectedPaperKey,
-    };
-
-    // Seed storage on true first run
-    if (!raw || Object.keys(raw).length === 0) {
-      localStorage.setItem(PREFS_KEY, JSON.stringify(merged));
-    }
-    return merged;
-  } catch {
-    localStorage.setItem(PREFS_KEY, JSON.stringify(DEFAULT_PREFS));
-    return DEFAULT_PREFS;
+/** Ensure prefs object has a selected paper key. */
+export function ensureDefaultPaper(prefs = {}) {
+  if (!prefs.selectedPaperKey) {
+    prefs.selectedPaperKey = DEFAULT_PAPER_KEY;
   }
+  return prefs;
+}
+
+/* ------------------------------------------------------------------ */
+/* Safe JSON helpers                                                  */
+/* ------------------------------------------------------------------ */
+function safeRead(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return fallback;
+    return JSON.parse(raw);
+  } catch {
+    return fallback;
+  }
+}
+
+function safeWrite(key, value) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // ignore quota / private mode errors
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* User Prefs                                                         */
+/* ------------------------------------------------------------------ */
+const DEFAULT_PREFS = {
+  brandTheme: 'sage',
+  headerFont: 'merriweather',
+  siteBg: '#FAF9F6',
+  bgTexture: 'none',
+  siteWidth: '950px',
+  cardDensity: 'cozy',
+  motion: 'low',
+  compactUI: false,
+  navOrder: ['today', 'past', 'favorites', 'settings'],
+  cardOrder: 'affirmation-first',
+  showCategoryChip: true,
+  // Removed confirmRegenerate and weekStart per latest request
+  dateFormat: 'long',
+  pastDefaultRange: 'all',
+  timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Chicago',
+  undoMs: 4000,
+  selectedPaperKey: DEFAULT_PAPER_KEY,
+};
+
+export function getUserPrefs() {
+  const p = safeRead(KEYS.prefs, DEFAULT_PREFS);
+  return ensureDefaultPaper({ ...DEFAULT_PREFS, ...p });
 }
 
 export function setUserPrefs(patch) {
-  const current = getUserPrefs(); // already merged with defaults
-  const next = {
-    ...current,
-    ...(patch || {}),
-  };
-
-  // Always keep journalStyle merged with defaults
-  if (patch && patch.journalStyle) {
-    next.journalStyle = {
-      ...DEFAULT_STYLE,
-      ...(current.journalStyle || {}),
-      ...(patch.journalStyle || {}),
-    };
-  }
-
-  // Keep selectedPaperKey in sync if caller passed a new themeKey
-  if (next.journalStyle?.themeKey && !next.selectedPaperKey) {
-    next.selectedPaperKey = next.journalStyle.themeKey;
-  }
-
-  localStorage.setItem(PREFS_KEY, JSON.stringify(next));
+  const next = { ...getUserPrefs(), ...patch };
+  ensureDefaultPaper(next);
+  safeWrite(KEYS.prefs, next);
   return next;
 }
 
-/* =========================
-   Daily Affirmation (keeps prior API names)
-   ========================= */
-const AFFIRMATIONS = [
-  {
-    text: 'I inhale peace. I exhale what no longer serves me.',
-    challenge: 'Breathe deeply 3 times and repeat the affirmation aloud with each breath.',
-    category: 'Calm & Grounding',
-  },
-  {
-    text: 'I am allowed to be proud of who I am becoming.',
-    challenge: 'Celebrate a recent win out loud — even if only to yourself in the mirror.',
-    category: 'Self-Compassion',
-  },
-  {
-    text: 'Small steps still move me forward.',
-    challenge: 'Pick one tiny task and do it for 2 minutes right now.',
-    category: 'Momentum',
-  },
-  {
-    text: 'My voice matters, and I use it with kindness.',
-    challenge: 'Send a supportive message to someone who needs to hear it.',
-    category: 'Connection',
-  },
-];
-
-function _readToday() {
-  try { return JSON.parse(localStorage.getItem(TODAY_KEY)) || null; }
-  catch { return null; }
-}
-function _writeToday(obj) {
-  localStorage.setItem(TODAY_KEY, JSON.stringify(obj));
+/* ------------------------------------------------------------------ */
+/* Entries API                                                        */
+/* ------------------------------------------------------------------ */
+export function listEntries() {
+  const list = safeRead(KEYS.entries, []);
+  // Normalize a little to avoid undefined fields downstream
+  return Array.isArray(list) ? list.map((e) => ({
+    id: e.id,
+    iso: e.iso,
+    content: e.content ?? '',
+    style: {
+      themeKey: e.style?.themeKey,
+      imageSrc: e.style?.imageSrc,
+      fontFamily: e.style?.fontFamily,
+      fontColor: e.style?.fontColor,
+      dateColor: e.style?.dateColor,
+      fontSize: e.style?.fontSize,
+      bold: !!e.style?.bold,
+      italic: !!e.style?.italic,
+    },
+  })) : [];
 }
 
-// Ensure there is a selection for today
-export function ensureTodayAffirmation() {
-  const todayStr = new Date().toDateString();
-  const existing = _readToday();
-  if (existing && existing.date === todayStr) return existing;
-
-  // pick deterministic by day index
-  const idx = Math.abs(todayStr.split('').reduce((a, c) => a + c.charCodeAt(0), 0)) % AFFIRMATIONS.length;
-  const pick = { ...AFFIRMATIONS[idx], date: todayStr, id: `day-${todayStr}` };
-  _writeToday(pick);
-  return pick;
-}
-
-export function regenerateToday() {
-  const todayStr = new Date().toDateString();
-  const i = Math.floor(Math.random() * AFFIRMATIONS.length);
-  const pick = { ...AFFIRMATIONS[i], date: todayStr, id: `day-${todayStr}-${i}` };
-  _writeToday(pick);
-  return pick;
-}
-
-/* =========================
-   Favorites (keeps prior API names)
-   ========================= */
-function _readFavs() {
-  try { return JSON.parse(localStorage.getItem(FAV_KEY)) || []; }
-  catch { return []; }
-}
-function _writeFavs(list) {
-  localStorage.setItem(FAV_KEY, JSON.stringify(list));
-}
-
-export function listFavorites() { return _readFavs(); }
-// Some older code referenced this name too:
-export function listFavoriteItems() { return _readFavs(); }
-
-/** Normalize & toggle favorite so Favorites page always has text/challenge/category/date */
-export function toggleFavorite(item) {
-  // Normalize what we store so Favorites can reliably render fields
-  const normalized = {
-    id: item?.id || `fav-${(item?.date || '')}-${(item?.text || item?.affirmation || '').slice(0, 30)}`,
-    text: item?.text || item?.affirmation || '',     // affirmation text
-    challenge: item?.challenge || '',                // challenge text
-    category: item?.category || item?.theme || '',   // e.g., Calm & Grounding
-    date: item?.date || new Date().toDateString(),
-  };
-
-  const favs = _readFavs();
-  const i = favs.findIndex(f => (f.id || f.text) === (normalized.id || normalized.text));
-  if (i >= 0) {
-    favs.splice(i, 1); // unfavorite
-  } else {
-    favs.unshift({ ...normalized, favAt: new Date().toISOString() });
-  }
-  _writeFavs(favs);
-  return favs;
-}
-
-export function removeFavorite(idOrText) {
-  const favs = _readFavs().filter(f => (f.id || f.text) !== idOrText);
-  _writeFavs(favs);
-}
-
-/* =========================
-   Entries v2 (style-aware)
-   ========================= */
-function _readEntries() {
-  try { return JSON.parse(localStorage.getItem(ENTRY_KEY)) || []; }
-  catch { return []; }
-}
-function _writeEntries(list) {
-  localStorage.setItem(ENTRY_KEY, JSON.stringify(list));
-}
-
-/**
- * addEntry(content, style)
- * style = {
- *   themeKey, imageSrc,
- *   fontFamily, fontColor, fontSize (number),
- *   bold, italic, dateColor
- * }
- */
-export function addEntry(content, style = {}) {
-  const list = _readEntries();
-  const id = (crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now());
-  const now = new Date();
-
-  // Merge the passed style with current defaults/prefs, so entries always have complete style
+export function addEntry(content = '', style = {}) {
   const prefs = getUserPrefs();
-  const mergedStyle = {
-    ...DEFAULT_STYLE,
-    ...(prefs.journalStyle || {}),
-    ...(style || {}),
-  };
+  const themeKey = style.themeKey ?? prefs.selectedPaperKey ?? DEFAULT_PAPER_KEY;
 
   const entry = {
-    id,
-    iso: now.toISOString(),
-    content: content || '',
+    id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    iso: new Date().toISOString(),
+    content: String(content || ''),
     style: {
-      themeKey:   mergedStyle.themeKey || null,
-      imageSrc:   mergedStyle.imageSrc || null,
-      fontFamily: mergedStyle.fontFamily || 'Merriweather',
-      fontColor:  mergedStyle.fontColor || '#2B2B2B',
-      fontSize:   Number(mergedStyle.fontSize || 18),
-      bold:       !!mergedStyle.bold,
-      italic:     !!mergedStyle.italic,
-      dateColor:  mergedStyle.dateColor || mergedStyle.fontColor || '#2B2B2B',
+      themeKey,
+      imageSrc: style.imageSrc ?? imageUrl(`${themeKey}.png`),
+      fontFamily: style.fontFamily || 'Merriweather',
+      fontColor: style.fontColor || '#2B2B2B',
+      dateColor: style.dateColor || style.fontColor || '#2B2B2B',
+      fontSize: Number(style.fontSize) || 20,
+      bold: !!style.bold,
+      italic: !!style.italic,
     },
   };
 
-  list.unshift(entry);
-  _writeEntries(list);
+  const list = listEntries();
+  list.push(entry);
+  safeWrite(KEYS.entries, list);
+  // Touch "today" so ensureTodayAffirmation shows today's card even after save
+  const today = safeRead(KEYS.today, {});
+  safeWrite(KEYS.today, { ...today, lastSavedIso: entry.iso });
   return entry;
 }
 
-export function listEntries() {
-  return _readEntries();
-}
-
-export function updateEntry(id, patch) {
-  const list = _readEntries();
-  const i = list.findIndex(e => e.id === id);
-  if (i === -1) return null;
-  list[i] = { ...list[i], ...patch, style: { ...(list[i].style || {}), ...(patch.style || {}) } };
-  _writeEntries(list);
-  return list[i];
-}
-
 export function removeEntry(id) {
-  const list = _readEntries().filter(e => e.id !== id);
-  _writeEntries(list);
+  const list = listEntries().filter((e) => e.id !== id);
+  safeWrite(KEYS.entries, list);
+  return true;
 }
+
+export function updateEntry(id, patch = {}) {
+  const list = listEntries();
+  const i = list.findIndex((e) => e.id === id);
+  if (i < 0) return false;
+
+  const prev = list[i];
+  const merged = {
+    ...prev,
+    content: patch.content !== undefined ? String(patch.content) : prev.content,
+    style: {
+      ...prev.style,
+      ...(patch.style || {}),
+    },
+  };
+  list[i] = merged;
+  safeWrite(KEYS.entries, list);
+  return true;
+}
+
+/* ------------------------------------------------------------------ */
+/* Favorites API (for Affirmations)                                   */
+/* ------------------------------------------------------------------ */
+export function listFavorites() {
+  const favs = safeRead(KEYS.favorites, []);
+  return Array.isArray(favs) ? favs : [];
+}
+
+// Backwards-compatible alias for older imports/components
+export const listFavoriteItems = (...args) => listFavorites(...args);
+
+export function toggleFavorite(item) {
+  // item expected shape: { id, text, challenge, category/theme }
+  const favs = listFavorites();
+  const id = item.id || `${item.date || ''}-${item.text || ''}`;
+  const idx = favs.findIndex((f) => (f.id || f.text) === (id || item.text));
+  if (idx >= 0) {
+    favs.splice(idx, 1);
+  } else {
+    favs.push({
+      id,
+      text: item.text || item.affirmation || '',
+      challenge: item.challenge || '',
+      category: item.category || item.theme || 'Daily',
+      addedIso: new Date().toISOString(),
+    });
+  }
+  safeWrite(KEYS.favorites, favs);
+  return favs;
+}
+
+/* ------------------------------------------------------------------ */
+/* Today Card (Affirmation + Challenge)                               */
+/* ------------------------------------------------------------------ */
+/**
+ * We keep a simple deterministic generator so today's card is stable per day.
+ * Stored in KEYS.today as: { ymd: 'YYYY-MM-DD', text, challenge, category }
+ */
+function ymd(d = new Date()) {
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+const AFFIRMATIONS = [
+  'I honor my progress, no matter the pace.',
+  'I choose compassion for myself today.',
+  'I am allowed to take up space and dream boldly.',
+  'I am safe to grow at my own rhythm.',
+  'My voice matters—gentle and strong.',
+  'I create calm through small, loving actions.',
+  'I show up for myself with courage.',
+  'Little by little, I rewrite my story.',
+];
+
+const CHALLENGES = [
+  'Take 5 slow breaths and write one thing you’re grateful for.',
+  'Set a 10-minute timer and tidy a tiny corner.',
+  'Drink a full glass of water and write how your body feels.',
+  'Message someone “thinking of you” and jot their reply.',
+  'Step outside for 2 minutes; describe one detail you notice.',
+  'Say “no” to one non-essential thing today; reflect on it.',
+  'Write one boundary you kept this week.',
+  'Celebrate a tiny win in three sentences.',
+];
+
+function seededPick(seed, arr) {
+  // simple LCG from date seed
+  let x = seed % 2147483647;
+  x = (x * 48271) % 2147483647;
+  return arr[x % arr.length];
+}
+
+function buildTodayCard(today = new Date()) {
+  const s = Number(ymd(today).replace(/-/g, '')); // YYYYMMDD number
+  const text = seededPick(s, AFFIRMATIONS);
+  const challenge = seededPick(s * 17, CHALLENGES);
+  return {
+    id: `day-${ymd(today)}`,
+    date: ymd(today),
+    text,
+    affirmation: text,
+    challenge,
+    category: 'Daily', // used by themeOf(card)
+  };
+}
+
+export function ensureTodayAffirmation() {
+  const todayKey = ymd(new Date());
+  const saved = safeRead(KEYS.today, null);
+  if (saved && saved.ymd === todayKey && saved.text && saved.challenge) {
+    return {
+      id: `day-${todayKey}`,
+      date: todayKey,
+      text: saved.text,
+      affirmation: saved.text,
+      challenge: saved.challenge,
+      category: saved.category || 'Daily',
+    };
+  }
+  const next = buildTodayCard(new Date());
+  safeWrite(KEYS.today, { ymd: todayKey, text: next.text, challenge: next.challenge, category: next.category });
+  return next;
+}
+
+export function regenerateToday(force = false) {
+  // If you want the “confirm before regenerate” behavior, do it in UI.
+  const next = buildTodayCard(new Date());
+  safeWrite(KEYS.today, {
+    ymd: ymd(new Date()),
+    text: next.text,
+    challenge: next.challenge,
+    category: next.category,
+    regenerated: true,
+    force,
+  });
+  return next;
+}
+
+/* ------------------------------------------------------------------ */
+/* Convenience: migrate any old image paths to public/                 */
+/* ------------------------------------------------------------------ */
+(function migrateImagePathsOnce() {
+  try {
+    const list = listEntries();
+    let changed = false;
+    const fix = (src) => {
+      // If it looks like an old /src/images import, replace with public URL
+      if (!src) return src;
+      if (/\/images\//.test(src) && !/^https?:/.test(src) && !src.startsWith(PUBLIC)) {
+        // leave alone if already absolute under PUBLIC
+        return src;
+      }
+      // if it was e.g. "static/media/..." from CRA imports, prefer saved src
+      return src;
+    };
+
+    const fixed = list.map((e) => {
+      const themeKey = e.style?.themeKey || DEFAULT_PAPER_KEY;
+      const imageSrc = e.style?.imageSrc || imageUrl(`${themeKey}.png`);
+      const corrected = fix(imageSrc) || imageUrl(`${themeKey}.png`);
+      if (corrected !== e.style?.imageSrc) changed = true;
+      return {
+        ...e,
+        style: { ...e.style, imageSrc: corrected },
+      };
+    });
+
+    if (changed) {
+      safeWrite(KEYS.entries, fixed);
+    }
+
+    // also ensure prefs has a default paper
+    const prefs = getUserPrefs();
+    if (!prefs.selectedPaperKey) {
+      setUserPrefs({ selectedPaperKey: DEFAULT_PAPER_KEY });
+    }
+  } catch {
+    // ignore
+  }
+})();
