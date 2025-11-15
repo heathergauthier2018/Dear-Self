@@ -1531,3 +1531,11 @@ body.dark-mode .streak-badge {
   color: #ffd79b;
   border-color: #5b4633;
 }
+/* Subtle pulse when the pill is present (>=2 days) */
+.card-footer .chip + span[title$="streak"] {
+  animation: ds-pill 2.8s ease-in-out infinite;
+}
+@keyframes ds-pill {
+  0%, 100% { transform: translateZ(0) scale(1); }
+  50% { transform: translateZ(0) scale(1.03); }
+}

@@ -1,5 +1,5 @@
 // src/components/JournalEntry.js
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import '../styles/App.css';
 import '../styles/theme.css';
 
@@ -22,6 +22,8 @@ const stripAffPrefix = (s = '') =>
 const stripChalPrefix = (s = '') =>
   s.replace(/^\s*.*?Challenge\s*\d+\s*:\s*/i, '').replace(/^\[|\]$/g, '').trim();
 const themeOf = (a = {}) => a.category ?? a.theme ?? 'Daily';
+const ymd = (d = new Date()) =>
+  `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 
 /* ——— Journal font options ——— */
 const FONT_OPTIONS = [
@@ -191,9 +193,23 @@ export default function JournalEntry() {
 
   // 🔥 streak state
   const [streak, setStreak] = useState(0);
+  // For “before vs after save” comparison
+  const prevStreakRef = useRef(0);
+
   useEffect(() => {
-    setStreak(computeStreak(listEntries()));
+    const s = computeStreak(listEntries());
+    setStreak(s);
+    prevStreakRef.current = s;
   }, []);
+
+  // Big center celebration (shown once per day on increments that are >= 2)
+  const [celebrate, setCelebrate] = useState(false);
+  const [celebrateValue, setCelebrateValue] = useState(0);
+
+  useEffect(() => {
+    // Always keep ref in sync as the user navigates
+    prevStreakRef.current = streak;
+  }, [streak]);
 
   useEffect(() => {
     const p = getUserPrefs() || {};
@@ -212,14 +228,31 @@ export default function JournalEntry() {
   };
 
   const handleSave = () => {
+    const before = prevStreakRef.current;
+
     addEntry(entryText, {
       themeKey: selectedTheme?.key,
       imageSrc: selectedTheme?.src || null,
       fontFamily, fontColor, fontSize, bold: isBold, italic: isItalic, dateColor: fontColor,
     });
+
     // Recompute streak right after save
-    setStreak(computeStreak(listEntries()));
-    setSavedToast(true); setTimeout(() => setSavedToast(false), 1800); setEntryText('');
+    const after = computeStreak(listEntries());
+    setStreak(after);
+    setSavedToast(true);
+    setTimeout(() => setSavedToast(false), 1800);
+    setEntryText('');
+
+    // 🎉 Show center celebration if the streak INCREASED and is now >= 2,
+    // but only once per day.
+    const todayKey = ymd(new Date());
+    const last = localStorage.getItem('dearself.lastCelebrated') || '';
+    if (after >= 2 && after > before && last !== todayKey) {
+      setCelebrateValue(after);
+      setCelebrate(true);
+      localStorage.setItem('dearself.lastCelebrated', todayKey);
+      setTimeout(() => setCelebrate(false), 3000);
+    }
   };
 
   const heartOff = '🤍';
@@ -248,7 +281,7 @@ export default function JournalEntry() {
           </div>
 
           <div className="card-actions" style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
-            {/* 🔥 now lives on the right with the tools; component hides itself if < 2 */}
+            {/* 🔥 badge hides itself for values < 2 */}
             <StreakBadge value={streak} />
 
             <button
@@ -434,6 +467,59 @@ export default function JournalEntry() {
       {savedToast && (
         <div className="undo-bar" role="status" aria-live="polite" style={{ background: '#14532d' }}>
           <span>Saved!</span>
+        </div>
+      )}
+
+      {/* 🎉 Center celebration overlay */}
+      {celebrate && (
+        <div
+          role="status"
+          aria-live="polite"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 9999,
+            display: 'grid',
+            placeItems: 'center',
+            background: 'rgba(0,0,0,.18)',
+            animation: 'fadeBackdrop 300ms ease',
+          }}
+        >
+          <div
+            style={{
+              background: '#fffef9',
+              color: '#7c3e00',
+              border: '2px solid #facc15',
+              borderRadius: 20,
+              padding: '22px 28px',
+              boxShadow: '0 30px 80px rgba(0,0,0,.25), 0 0 0 6px rgba(250,204,21,.25)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 14,
+              transform: 'scale(1)',
+              animation: 'popIn 420ms cubic-bezier(.2,1.3,.3,1)',
+              fontWeight: 800,
+              fontSize: 20,
+            }}
+          >
+            <span style={{ fontSize: 28 }}>🔥</span>
+            <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+              {celebrateValue} {celebrateValue === 1 ? 'day' : 'day'} streak!
+            </span>
+          </div>
+
+          {/* Keyframe helpers (scoped via inline <style>) */}
+          <style>{`
+            @keyframes popIn {
+              0% { transform: scale(.8); opacity: 0 }
+              40% { transform: scale(1.12); opacity: 1 }
+              70% { transform: scale(.98) }
+              100% { transform: scale(1) }
+            }
+            @keyframes fadeBackdrop {
+              from { opacity: 0 } to { opacity: 1 }
+            }
+          `}</style>
         </div>
       )}
     </div>

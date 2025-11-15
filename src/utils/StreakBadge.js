@@ -3,29 +3,35 @@ import React, { useEffect, useRef, useState } from 'react';
 
 /**
  * StreakBadge
- * - Shows once value >= 2 (parent should conditionally render).
+ * - Visible only when value >= 2 (returns null otherwise).
  * - Pops quickly on each increment.
- * - On the FIRST threshold crossing (1 -> 2), does a slightly longer pop + glow.
+ * - On the FIRST threshold crossing (1 -> 2), adds a brief glow.
  *
  * Props:
- *   value: number   // current streak length
- *   compact?: bool  // slightly tighter padding & font-size
+ *   value: number
+ *   compact?: boolean
  */
 export default function StreakBadge({ value = 0, compact = false }) {
-  // animation flags
+  // Hooks must always run, even if we later render null
   const [pop, setPop] = useState(false);
   const [firstGlow, setFirstGlow] = useState(false);
-
-  // previous value to detect changes
   const prev = useRef(value);
 
   useEffect(() => {
+    // If hidden, skip all animation logic
+    if (value < 2) {
+      prev.current = value;
+      setPop(false);
+      setFirstGlow(false);
+      return;
+    }
+
     const was = prev.current;
     const now = value;
     prev.current = now;
 
-    const justReached = was < 2 && now >= 2;   // first time crossing into visible range
-    const increased   = now >= 2 && now > was; // normal increments while visible
+    const justReached = was < 2 && now >= 2;   // first time becoming visible
+    const increased   = now >= 2 && now > was; // subsequent increments
 
     if (!(justReached || increased)) return;
 
@@ -40,7 +46,9 @@ export default function StreakBadge({ value = 0, compact = false }) {
     return () => clearTimeout(t);
   }, [value]);
 
-  // styles
+  // Only render when value >= 2
+  if (value < 2) return null;
+
   const baseStyle = {
     display: 'inline-flex',
     alignItems: 'center',
