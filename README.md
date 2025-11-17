@@ -1,70 +1,179 @@
-# Getting Started with Create React App
+🌸 Dear Self — A Soft & Mindful Journaling Experience
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A beautifully designed React journaling application focused on presence, emotional safety, and intentional reflection. Dear Self provides daily affirmations, a calm writing space, customizable themes, mood tracking (future), and an atmospheric journaling environment inspired by soft pastels, watercolor textures, and paper-like UI.
 
-## Available Scripts
+Dear Self is not a productivity tool.
+It is a sanctuary — a quiet place for reflection.
 
-In the project directory, you can run:
+<!-- Add your banner image here -->
 
-### `npm start`
+![Dear Self Banner](./assets/banner.png)
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+✨ Features
+🌞 Daily Moment System
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+Automatically generates a soft, watercolor-styled affirmation each day
 
-### `npm test`
+Includes a matching gentle challenge for emotional grounding
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Atmosphere shifts subtly based on theme
 
-### `npm run build`
+Favorites system with soft animations
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+📔 Journaling Experience
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+Three writing modes: Handwritten, Typed, Minimalist
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Paper-like textures (linen, watercolor, parchment)
 
-### `npm run eject`
+Calm typography with emotional tone
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+Auto-saving, editing, and viewing past entries
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+📅 Calendar System
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+Tracks days you showed up — without guilt
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+Filled days display affirmations, challenges, and entries
 
-## Learn More
+Blank days remain “quiet days” with no judgment
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+Soft animations + archival day view
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+🎨 Theme Studio
 
-### Code Splitting
+Pre-made theme packs (Coquette, Earthbound, Celestial, Academic, etc.)
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+Fully custom color palettes
 
-### Analyzing the Bundle Size
+Paper textures, ink colors, and icon motif options
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+Live preview and theme saving
 
-### Making a Progressive Web App
+💗 Mood Tracking (Coming Soon)
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+Pastel emotional dots
 
-### Advanced Configuration
+Optional mood descriptions
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+Emotional heatmaps
 
-### Deployment
+Gentle mood-based prompts
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+🛠 Tech Stack
+Frontend
 
-### `npm run build` fails to minify
+React (Hooks + functional components)
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+CSS modules / styled components (your choice)
+
+React Router
+
+LocalStorage for persistence
+
+Design Philosophy
+
+Soft UI
+
+Pastel color palettes
+
+Watercolor textures
+
+Accessibility-aware typography
+
+📁 Project Structure
+dear-self/
+│── public/
+│── src/
+│   ├── components/
+│   │   ├── DailyMoment/
+│   │   ├── Journal/
+│   │   ├── Calendar/
+│   │   ├── ThemeStudio/
+│   │   └── Widgets/
+│   ├── hooks/
+│   ├── utils/
+│   ├── data/
+│   └── App.js
+│
+└── README.md
+
+🌐 Live Demo
+
+(Insert your GitHub Pages or Netlify link)
+👉 https://heathergauthier2018.github.io/Dear-Self/
+
+🚀 Installation & Setup
+
+Clone the repo and install dependencies:
+
+git clone https://github.com/yourusername/Dear-Self.git
+cd Dear-Self
+npm install
+npm start
+
+
+Build for production:
+
+npm run build
+
+🧪 Testing
+
+(If you want to add simple tests later)
+
+Jest + React Testing Library
+
+Snapshot tests for components
+
+Cypress E2E tests (planned)
+
+📚 Architecture Overview
+DailyMoment → Generates daily affirmation package
+Calendar → Stores days in localStorage
+Journal → Writing modes + paper texture engine
+ThemeStudio → Theme builder + previewer
+Widgets → Mood, Gratitude, Reflection prompts
+
+🧭 Roadmap
+Short Term
+
+Mood selector
+
+Gratitude widget
+
+Animation polish
+
+Responsive mobile layout
+
+Medium Term
+
+User accounts + cloud sync
+
+Export journal to PDF
+
+Dark mode (already designed, implementing next)
+
+Long Term
+
+AI reflection prompts
+
+“Timeline View” emotional archive
+
+Theme marketplace with downloadable packs
+
+✍️ Motivation
+
+This app was born from wanting a digital refuge — a place where healing, reflection, and quiet moments can exist without pressure, judgment, or productivity expectations.
+
+📸 Screenshots
+
+(Add your actual images later)
+
+/assets/screenshot1.png
+/assets/screenshot2.png
+/assets/theme-studio.png
+/assets/journal-modes.png
+
+🤍 License
+
+MIT License
