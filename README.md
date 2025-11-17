@@ -216,4 +216,44 @@ It is soft, slow, and emotionally safe — a space to breathe.
 
 📝 License
 
-MIT License
+Dear Self — All Rights Reserved License  
+Copyright © 2025 Heather Gauthier
+
+All rights reserved.
+
+This software and all associated files, assets, designs, artwork, written content,
+and documentation are the exclusive property of Heather Gauthier.
+
+You MAY NOT:
+- Copy, reproduce, or distribute this code or any part of it
+- Modify, adapt, or create derivative works
+- Share or publish the code in any form
+- Use the code in personal, academic, or commercial projects
+- Sell or sublicense the code
+- Incorporate any part of this project into another software product
+- Use any of the app’s visual design, UI concepts, themes, writing, artwork, or branding
+
+You MAY:
+- View the code for personal learning
+- Clone the repo for personal reference
+- Read the documentation
+
+You MUST NOT:
+Use this codebase or any Dear Self assets in any application, product, or service without
+explicit written permission from the owner.
+
+Ownership:
+All rights, including all intellectual property rights, remain with the owner: Heather Gauthier.
+No rights are granted, implied, or transferred.
+
+Commercial Use:
+This project is intended to evolve into a commercial software product. Any reproduction, copying,
+use, or distribution of any part of this code without permission is strictly prohibited.
+
+Liability:
+This software is provided “as is” without warranty of any kind. The owner is not liable for damages
+arising from viewing or referencing this code.
+
+For inquiries regarding licensing or commercial use:
+heathergauthier2018@gmail.com
+
