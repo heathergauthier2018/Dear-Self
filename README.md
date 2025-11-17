@@ -255,5 +255,5 @@ This software is provided “as is” without warranty of any kind. The owner is
 arising from viewing or referencing this code.
 
 For inquiries regarding licensing or commercial use:
-heathergauthier2018@gmail.com
+heathergauthier18@gmail.com
 
