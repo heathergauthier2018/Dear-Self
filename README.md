@@ -1,179 +1,219 @@
-🌸 Dear Self — A Soft & Mindful Journaling Experience
+🌸 Dear Self — A Gentle, Mindful Journaling App
 
-A beautifully designed React journaling application focused on presence, emotional safety, and intentional reflection. Dear Self provides daily affirmations, a calm writing space, customizable themes, mood tracking (future), and an atmospheric journaling environment inspired by soft pastels, watercolor textures, and paper-like UI.
+A beautifully atmospheric journaling app built in React.
+Dear Self focuses on emotional safety, softness, and reflective design — offering users affirmations, customizable themes, mood tracking (upcoming), and a calm writing space that evolves with them.
 
-Dear Self is not a productivity tool.
-It is a sanctuary — a quiet place for reflection.
-
-<!-- Add your banner image here -->
-
-![Dear Self Banner](./assets/banner.png)
+👉 Live Demo:
+https://heathergauthier2018.github.io/Dear-Self/
 
 ✨ Features
-🌞 Daily Moment System
+🌞 Daily Moment
 
-Automatically generates a soft, watercolor-styled affirmation each day
+Daily affirmation + gentle challenge
 
-Includes a matching gentle challenge for emotional grounding
+Watercolor background themes
 
-Atmosphere shifts subtly based on theme
+“Favorite” animations
 
-Favorites system with soft animations
+Generated only when the user opens the app
 
-📔 Journaling Experience
+📔 Journal
 
-Three writing modes: Handwritten, Typed, Minimalist
+Typed, Handwritten, and Minimal writing modes
 
-Paper-like textures (linen, watercolor, parchment)
+Paper textures (linen, parchment, watercolor)
 
-Calm typography with emotional tone
+Auto-save + past entry recall
 
-Auto-saving, editing, and viewing past entries
+Editing + rewrite options
 
-📅 Calendar System
+📅 Calendar
 
-Tracks days you showed up — without guilt
+Tracks days you showed up
 
-Filled days display affirmations, challenges, and entries
+Empty days are treated with emotional neutrality
 
-Blank days remain “quiet days” with no judgment
+Tap into any day to view:
 
-Soft animations + archival day view
+Affirmation
+
+Challenge
+
+Entry
+
+Widgets
 
 🎨 Theme Studio
 
-Pre-made theme packs (Coquette, Earthbound, Celestial, Academic, etc.)
+Pre-made theme packs (Coquette, Earthbound, Celestial, Minimalist, etc.)
 
-Fully custom color palettes
+Custom colors, fonts, and paper textures
 
-Paper textures, ink colors, and icon motif options
+Live preview engine
 
-Live preview and theme saving
+💗 Upcoming
 
-💗 Mood Tracking (Coming Soon)
+Mood selector
 
-Pastel emotional dots
+Gratitude line
 
-Optional mood descriptions
+Reflection widgets
 
-Emotional heatmaps
+Year emotional heatmap
 
-Gentle mood-based prompts
+PDF export
 
-🛠 Tech Stack
-Frontend
+🛠️ Tech Stack
 
-React (Hooks + functional components)
+Frontend:
 
-CSS modules / styled components (your choice)
+React (Hooks)
 
 React Router
 
-LocalStorage for persistence
+CSS (App.css + Theme.css)
 
-Design Philosophy
+LocalStorage (for all persistence)
 
-Soft UI
+Architecture Style:
 
-Pastel color palettes
+Component-driven
 
-Watercolor textures
+Soft UI design
 
-Accessibility-aware typography
+Utility modules for logic separation
 
-📁 Project Structure
-dear-self/
+Services for state retrieval
+
+🗂️ File Structure
+
+Directly matching your actual folder layout:
+
+DEAR-SELF/
+│── build/
+│── node_modules/
 │── public/
-│── src/
-│   ├── components/
-│   │   ├── DailyMoment/
-│   │   ├── Journal/
-│   │   ├── Calendar/
-│   │   ├── ThemeStudio/
-│   │   └── Widgets/
-│   ├── hooks/
-│   ├── utils/
-│   ├── data/
-│   └── App.js
+│   ├── images/
+│   ├── favicon.ico
+│   ├── index.html
+│   ├── logo192.png
+│   ├── logo512.png
+│   ├── manifest.json
+│   └── robots.txt
 │
-└── README.md
-
-🌐 Live Demo
-
-(Insert your GitHub Pages or Netlify link)
-👉 https://heathergauthier2018.github.io/Dear-Self/
+└── src/
+    ├── components/
+    │   ├── Favorites.js
+    │   ├── JournalEntry.js
+    │   ├── PastEntries.js
+    │   └── Settings.js
+    │
+    ├── data/
+    │   └── affirmations.js
+    │
+    ├── services/
+    │   ├── auth.js
+    │   ├── getTodayEntry.js
+    │   ├── sendUsageWarning.js
+    │   └── streak.js
+    │
+    ├── styles/
+    │   ├── App.css
+    │   ├── PastEntries.css
+    │   └── theme.css
+    │
+    ├── utils/
+    │   ├── getTodayEntry.js
+    │   ├── paperImages.js
+    │   ├── prefs.js
+    │   ├── probelImages.js
+    │   ├── sendUsageWarning.js
+    │   └── StreakBadge.js
+    │
+    ├── App.js
+    ├── App.test.js
+    ├── index.css
+    ├── index.js
+    ├── logo.svg
+    ├── reportWebVitals.js
+    └── setupTests.js
 
 🚀 Installation & Setup
 
-Clone the repo and install dependencies:
+Clone and install dependencies:
 
-git clone https://github.com/yourusername/Dear-Self.git
-cd Dear-Self
+git clone https://github.com/heathergauthier2018/Dear-Self.git
+cd dear-self
 npm install
 npm start
 
 
-Build for production:
+Production build:
 
 npm run build
 
-🧪 Testing
+🧩 Architecture Overview
+DailyMoment (core ritual system)
+│
+├── pulls random affirmation
+├── assigns theme
+├── generates challenge
+└── stores in DayObject
 
-(If you want to add simple tests later)
+Journal
+├── writing modes
+├── paper texture engine
+└── auto-save logic
 
-Jest + React Testing Library
+Calendar
+└── day creation rules
+    - Created only when user opens app
+    - Blank days remain blank
 
-Snapshot tests for components
+ThemeStudio
+├── theme packs
+├── color systems
+└── customization engine
 
-Cypress E2E tests (planned)
+🧪 Tests
 
-📚 Architecture Overview
-DailyMoment → Generates daily affirmation package
-Calendar → Stores days in localStorage
-Journal → Writing modes + paper texture engine
-ThemeStudio → Theme builder + previewer
-Widgets → Mood, Gratitude, Reflection prompts
+React Testing Library & Jest
+(Current tests include App.test.js — more planned)
 
 🧭 Roadmap
 Short Term
 
-Mood selector
+Mood tracking
 
-Gratitude widget
+Gratitude line
 
-Animation polish
+Theme polish
 
-Responsive mobile layout
+Mid Term
 
-Medium Term
+Dark mode (candle mode, moonlight themes)
 
-User accounts + cloud sync
+User accounts
 
-Export journal to PDF
-
-Dark mode (already designed, implementing next)
+Sync across devices
 
 Long Term
 
-AI reflection prompts
+AI-assisted journaling prompts
 
-“Timeline View” emotional archive
+Emotional timeline view
 
-Theme marketplace with downloadable packs
-
-✍️ Motivation
-
-This app was born from wanting a digital refuge — a place where healing, reflection, and quiet moments can exist without pressure, judgment, or productivity expectations.
+Export entries to PDF / print
 
 📸 Screenshots
 
-(Add your actual images later)
+(Add images inside /public/images or create /assets)
 
-/assets/screenshot1.png
-/assets/screenshot2.png
-/assets/theme-studio.png
-/assets/journal-modes.png
+✍️ Motivation
 
-🤍 License
+Dear Self is designed as a digital sanctuary, not a productivity tool.
+It is soft, slow, and emotionally safe — a space to breathe.
+
+📝 License
 
 MIT License
