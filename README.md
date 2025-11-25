@@ -1,94 +1,108 @@
-🌸 Dear Self — A Gentle, Mindful Journaling App
+# 🌸 Dear Self — A Gentle, Mindful Journaling App
 
-A beautifully atmospheric journaling app built in React.
-Dear Self focuses on emotional safety, softness, and reflective design — offering users affirmations, customizable themes, mood tracking (upcoming), and a calm writing space that evolves with them.
+A calm, atmospheric journaling application built with **React**, designed to feel soft, emotionally safe, and reflective.  
+Dear Self offers daily affirmations, writing modes, customizable themes, and a serene, private journaling experience powered by local data persistence.
 
-👉 Live Demo:
-https://heathergauthier2018.github.io/Dear-Self/
+👉 **Live Demo:** https://heathergauthier2018.github.io/Dear-Self/
 
-✨ Features
-🌞 Daily Moment
+---
 
-Daily affirmation + gentle challenge
+## ✨ What This Project Demonstrates
 
-Watercolor background themes
+Dear Self showcases modern front-end engineering, thoughtful UX design, and wellness-minded product thinking.
 
-“Favorite” animations
+### 🎨 **Design & UX**
+- Soft, mindful UI inspired by journaling aesthetics  
+- Gentle color system & watercolor textures  
+- Daily ritual flow (affirmation → challenge → journal)  
+- Emotionally safe interactions (no guilt, no productivity pressure)
 
-Generated only when the user opens the app
+### ⚛️ **React Engineering**
+- Component-driven architecture  
+- Hooks for state management and autosave  
+- LocalStorage-based persistence  
+- React Router for navigation  
+- Utility modules for logic isolation  
+- Custom theming system with live preview
 
-📔 Journal
+### 🌱 **Wellness-Centered Features**
+- Daily “moment” generator  
+- Gentle challenge prompts  
+- Multiple writing modes  
+- Calendar reflection view  
+- Theme studio with customizable packs  
 
-Typed, Handwritten, and Minimal writing modes
+---
 
-Paper textures (linen, parchment, watercolor)
+## 🌞 Core Features
 
-Auto-save + past entry recall
+### **🌼 Daily Moment (Affirmation Ritual)**
+Every new day generates:
+- A positive affirmation  
+- A gentle challenge  
+- A soft theme  
+- A calming animation  
+- Stored in a single “Day Object” so the moment stays stable all day  
 
-Editing + rewrite options
+---
 
-📅 Calendar
+### **📔 Journal**
+A peaceful, private writing space featuring:
+- **Typed, Handwritten, and Minimalist writing modes**  
+- Watercolor, linen, and parchment paper textures  
+- Auto-save using `localStorage`  
+- Past entry browsing  
+- Entry editing & rewriting  
 
-Tracks days you showed up
+---
 
-Empty days are treated with emotional neutrality
+### **📅 Calendar**
+A guilt-free reflection tool:
+- Shows which days you wrote  
+- Blank days remain neutral (no streak shaming)  
+- Tap any day to view:
+  - Affirmation  
+  - Challenge  
+  - Entry  
+  - Theme preview  
 
-Tap into any day to view:
+---
 
-Affirmation
+### **🎨 Theme Studio**
+A calming customization system:
+- Coquette, Earthbound, Celestial, Minimalist theme packs  
+- Custom color + font selectors  
+- Texture selector  
+- Live preview engine  
 
-Challenge
+---
 
-Entry
+## 💗 Upcoming Enhancements
 
-Widgets
+- Mood selector  
+- Gratitude line  
+- Reflection widgets  
+- Yearly emotional heatmap  
+- Dark Mode (Moonlight / Candlelight)  
+- PDF export for print journaling  
+- Long-term: AI-assisted prompt generation  
 
-🎨 Theme Studio
+---
 
-Pre-made theme packs (Coquette, Earthbound, Celestial, Minimalist, etc.)
+## 🧱 Tech Stack
 
-Custom colors, fonts, and paper textures
+- **React** (Hooks + functional components)  
+- **React Router**  
+- **CSS** (App.css, PastEntries.css, theme.css)  
+- **LocalStorage** for persistence  
+- **Utility-based architecture**  
+- **Custom theming engine**  
 
-Live preview engine
+---
 
-💗 Upcoming
+## 📂 Project Structure
 
-Mood selector
-
-Gratitude line
-
-Reflection widgets
-
-Year emotional heatmap
-
-PDF export
-
-🛠️ Tech Stack
-
-Frontend:
-
-React (Hooks)
-
-React Router
-
-CSS (App.css + Theme.css)
-
-LocalStorage (for all persistence)
-
-Architecture Style:
-
-Component-driven
-
-Soft UI design
-
-Utility modules for logic separation
-
-Services for state retrieval
-
-🗂️ File Structure
-
-Directly matching your actual folder layout:
-
+```text
 DEAR-SELF/
 │── build/
 │── node_modules/
@@ -96,8 +110,6 @@ DEAR-SELF/
 │   ├── images/
 │   ├── favicon.ico
 │   ├── index.html
-│   ├── logo192.png
-│   ├── logo512.png
 │   ├── manifest.json
 │   └── robots.txt
 │
@@ -127,7 +139,6 @@ DEAR-SELF/
     │   ├── paperImages.js
     │   ├── prefs.js
     │   ├── probelImages.js
-    │   ├── sendUsageWarning.js
     │   └── StreakBadge.js
     │
     ├── App.js
@@ -137,123 +148,104 @@ DEAR-SELF/
     ├── logo.svg
     ├── reportWebVitals.js
     └── setupTests.js
+```
 
-🚀 Installation & Setup
+---
 
-Clone and install dependencies:
+## 🚀 Running Dear Self Locally
 
+### 1️⃣ Clone the repository
+
+```bash
 git clone https://github.com/heathergauthier2018/Dear-Self.git
-cd dear-self
+cd Dear-Self
+```
+
+### 2️⃣ Install dependencies
+
+```bash
 npm install
+```
+
+### 3️⃣ Start the dev server
+
+```bash
 npm start
+```
 
+### 4️⃣ Build the production bundle
 
-Production build:
-
+```bash
 npm run build
+```
 
-🧩 Architecture Overview
-DailyMoment (core ritual system)
-│
-├── pulls random affirmation
-├── assigns theme
-├── generates challenge
-└── stores in DayObject
+---
 
-Journal
-├── writing modes
-├── paper texture engine
-└── auto-save logic
+## 🧩 Architecture Overview
 
-Calendar
-└── day creation rules
-    - Created only when user opens app
-    - Blank days remain blank
+### **DailyMoment System**
+- Pulls a random affirmation  
+- Generates a gentle challenge  
+- Assigns a daily soft theme  
+- Bundles into a single DayObject  
+- Stored safely in LocalStorage  
 
-ThemeStudio
-├── theme packs
-├── color systems
-└── customization engine
+### **Journal System**
+- Writing modes  
+- Texture engine  
+- Autosave logic  
+- Past entry retrieval  
+- Entry editing & rewriting  
 
-🧪 Tests
+### **Calendar System**
+- Days appear only when the user opens the app  
+- No penalty for missed days  
+- Tap-to-view previous content  
 
-React Testing Library & Jest
-(Current tests include App.test.js — more planned)
+### **Theme Studio**
+- Pre-built theme packs  
+- Color, font, and texture customization  
+- Real-time preview engine  
 
-🧭 Roadmap
-Short Term
+---
 
-Mood tracking
+## 🧪 Tests
 
-Gratitude line
+- **Jest**  
+- **React Testing Library**  
+- Includes baseline test coverage (`App.test.js`)  
+- Additional tests planned for:
+  - Theme studio behavior  
+  - Past entries logic  
+  - Calendar edge cases  
 
-Theme polish
+---
 
-Mid Term
+## ✍️ Developer Motivation
 
-Dark mode (candle mode, moonlight themes)
+Dear Self is intended to be a **digital sanctuary**—not a productivity tracker.  
+It is soft. It is slow. It is a place to breathe, explore, and reflect without pressure.
 
-User accounts
+---
 
-Sync across devices
+## 📝 License — All Rights Reserved
 
-Long Term
+**Dear Self © 2025 — Heather Gauthier**
 
-AI-assisted journaling prompts
+All code, assets, UI designs, writing, artwork, and branding are fully owned by the creator.
 
-Emotional timeline view
+### ❌ You MAY NOT:
+- Copy or reuse the code  
+- Reproduce UI designs, themes, or artwork  
+- Distribute or modify this project  
+- Use it in personal, academic, or commercial work  
+- Incorporate it into other software  
+- Sell or sublicense any part of the project  
 
-Export entries to PDF / print
+### ✅ You MAY:
+- View the code for learning  
+- Clone locally for study  
+- Read the documentation  
 
-📸 Screenshots
-
-(Add images inside /public/images or create /assets)
-
-✍️ Motivation
-
-Dear Self is designed as a digital sanctuary, not a productivity tool.
-It is soft, slow, and emotionally safe — a space to breathe.
-
-📝 License
-
-Dear Self — All Rights Reserved License  
-Copyright © 2025 Heather Gauthier
-
-All rights reserved.
-
-This software and all associated files, assets, designs, artwork, written content,
-and documentation are the exclusive property of Heather Gauthier.
-
-You MAY NOT:
-- Copy, reproduce, or distribute this code or any part of it
-- Modify, adapt, or create derivative works
-- Share or publish the code in any form
-- Use the code in personal, academic, or commercial projects
-- Sell or sublicense the code
-- Incorporate any part of this project into another software product
-- Use any of the app’s visual design, UI concepts, themes, writing, artwork, or branding
-
-You MAY:
-- View the code for personal learning
-- Clone the repo for personal reference
-- Read the documentation
-
-You MUST NOT:
-Use this codebase or any Dear Self assets in any application, product, or service without
-explicit written permission from the owner.
-
-Ownership:
-All rights, including all intellectual property rights, remain with the owner: Heather Gauthier.
-No rights are granted, implied, or transferred.
-
-Commercial Use:
-This project is intended to evolve into a commercial software product. Any reproduction, copying,
-use, or distribution of any part of this code without permission is strictly prohibited.
-
-Liability:
-This software is provided “as is” without warranty of any kind. The owner is not liable for damages
-arising from viewing or referencing this code.
-
-For inquiries regarding licensing or commercial use:
-heathergauthier18@gmail.com
-
+For permission or licensing inquiries:  
+📧 **heathergauthier18@gmail.com**
