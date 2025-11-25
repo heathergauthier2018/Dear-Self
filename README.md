@@ -234,18 +234,13 @@ It is soft. It is slow. It is a place to breathe, explore, and reflect without p
 
 All code, assets, UI designs, writing, artwork, and branding are fully owned by the creator.
 
-### ❌ You MAY NOT:
+### You MAY NOT:
 - Copy or reuse the code  
 - Reproduce UI designs, themes, or artwork  
 - Distribute or modify this project  
 - Use it in personal, academic, or commercial work  
 - Incorporate it into other software  
 - Sell or sublicense any part of the project  
-
-### ✅ You MAY:
-- View the code for learning  
-- Clone locally for study  
-- Read the documentation  
 
 For permission or licensing inquiries:  
 📧 **heathergauthier18@gmail.com**
