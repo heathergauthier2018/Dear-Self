@@ -1,106 +1,163 @@
 # 🌸 Dear Self — A Gentle, Mindful Journaling App
 
-A calm, atmospheric journaling application built with **React**, designed to feel soft, emotionally safe, and reflective.  
-Dear Self offers daily affirmations, writing modes, customizable themes, and a serene, private journaling experience powered by local data persistence.
+**Dear Self** is a calm, atmospheric journaling experience built with **React**, designed to feel soft, emotionally safe, and deeply personal.  
+It focuses on quiet ritual, gentle design, and giving users a space that feels like *their own*—private, soothing, and fully customizable.
 
 👉 **Live Demo:** https://heathergauthier2018.github.io/Dear-Self/
 
 ---
 
-## ✨ What This Project Demonstrates
+# ✨ What This Project Demonstrates
 
-Dear Self showcases modern front-end engineering, thoughtful UX design, and wellness-minded product thinking.
+Dear Self blends mindful design with thoughtful front-end engineering to create a journaling experience that prioritizes emotional well-being and intuitive customization.
 
 ### 🎨 **Design & UX**
-- Soft, mindful UI inspired by journaling aesthetics  
-- Gentle color system & watercolor textures  
-- Daily ritual flow (affirmation → challenge → journal)  
-- Emotionally safe interactions (no guilt, no productivity pressure)
+- Soft UI inspired by analog journaling aesthetics  
+- Watercolor-style visuals and warm, gentle color palettes  
+- Optional background themes  
+- A daily ritual flow (affirmation → gentle challenge → writing)  
+- Emotionally safe interaction design (no guilt, no gamified pressure)
 
-### ⚛️ **React Engineering**
-- Component-driven architecture  
-- Hooks for state management and autosave  
-- LocalStorage-based persistence  
-- React Router for navigation  
-- Utility modules for logic isolation  
-- Custom theming system with live preview
+### ⚛️ **Engineering & Architecture**
+- Component-driven architecture using **React Hooks**  
+- LocalStorage persistence for all user data  
+- Theme selector powered by custom utility modules  
+- React Router for app navigation  
+- Structured utilities for theming, entries, date logic, and data handling  
 
-### 🌱 **Wellness-Centered Features**
-- Daily “moment” generator  
-- Gentle challenge prompts  
-- Multiple writing modes  
-- Calendar reflection view  
-- Theme studio with customizable packs  
+### 🌱 **Wellness-Centered Product Thinking**
+- Focus on calm interaction, encouraging reflection—not productivity  
+- A daily “moment” that feels supportive rather than demanding  
+- Customization features that make the journal feel personal and comforting  
 
 ---
 
-## 🌞 Core Features
+# 🌞 Version 1 — Core Features (Current Live App)
 
-### **🌼 Daily Moment (Affirmation Ritual)**
-Every new day generates:
+Version 1 is intentionally simple, gentle, and stable.  
+These are the features that **currently exist** in the deployed build:
+
+### **🌼 Daily Moment**
+A soft daily ritual that includes:
 - A positive affirmation  
 - A gentle challenge  
-- A soft theme  
-- A calming animation  
-- Stored in a single “Day Object” so the moment stays stable all day  
+- A watercolor-style theme  
+- Favorite animation  
+- Content that stays consistent throughout the day  
 
 ---
 
-### **📔 Journal**
-A peaceful, private writing space featuring:
-- **Typed, Handwritten, and Minimalist writing modes**  
-- Watercolor, linen, and parchment paper textures  
-- Auto-save using `localStorage`  
-- Past entry browsing  
-- Entry editing & rewriting  
+### **📔 Journal (Version 1 Functionality)**
+A quiet and private writing space featuring:
+- **Typed writing mode**  
+- Optional soft paper-style backgrounds  
+- LocalStorage saving of all entries  
+- Ability to view past written entries  
+- Favorite entries view  
+- **Simple streak counter** (days you’ve shown up to write)
+
+> 💡 *Note:*  
+> Auto-save, handwritten mode, calendar navigation, editing, and expanded writing features are **future enhancements**, not part of Version 1.
 
 ---
 
-### **📅 Calendar**
-A guilt-free reflection tool:
-- Shows which days you wrote  
-- Blank days remain neutral (no streak shaming)  
-- Tap any day to view:
-  - Affirmation  
-  - Challenge  
-  - Entry  
-  - Theme preview  
+### **🎨 Theme Customization (Version 1)**
+- Gentle pre-made theme selection  
+- Soft backgrounds and comforting color palettes  
+- Designed to feel personal, expressive, and welcoming  
 
 ---
 
-### **🎨 Theme Studio**
-A calming customization system:
-- Coquette, Earthbound, Celestial, Minimalist theme packs  
-- Custom color + font selectors  
-- Texture selector  
-- Live preview engine  
+# 🌱 Future Versions — Curated Roadmap (Not Yet Implemented)
+
+This roadmap is curated to reflect medium- and long-term direction without overwhelming detail.
 
 ---
 
-## 💗 Upcoming Enhancements
+## 📝 Journal Enhancements
+Planned expansions to deepen the writing experience:
+- **Auto-save** while typing  
+- **Handwritten writing mode**  
+- **Minimal / focus writing mode**  
+- Rich-text formatting (bold, italics, underline)  
+- Entry editing and rewrites  
+- Entry search + filtering  
+- Multi-entry support  
+- Writing prompts and reflection suggestions  
 
-- Mood selector  
-- Gratitude line  
-- Reflection widgets  
-- Yearly emotional heatmap  
-- Dark Mode (Moonlight / Candlelight)  
-- PDF export for print journaling  
-- Long-term: AI-assisted prompt generation  
+### 🔥 Streak System (Expanded)
+- Smarter streak tracking  
+- Soft badge system  
+- Gentle streak resets (no guilt or shame)  
+- Celebration micro-animations  
+- Weekly reflection tied to streak consistency  
 
 ---
 
-## 🧱 Tech Stack
+## 🗓️ Calendar & Timeline System
+A future interactive calendar to explore reflections over time:
+- Clickable past days  
+- View previous affirmations, challenges, and entries  
+- Mood tagging  
+- Mood heatmap  
+- Scrollable timeline / year-in-review  
 
-- **React** (Hooks + functional components)  
+---
+
+## 🎨 Advanced Theming & Customization
+Enhancements that deepen personalization:
+- **Dark Mode** (Moonlight, Candlelight)  
+- Seasonal aesthetic packs (Cozy Autumn, Celestial Night, Spring Garden, etc.)  
+- User-defined accent colors  
+- Uploadable custom paper textures  
+- Optional animated ambient backgrounds (dust motes, glow particles)  
+
+### 🎨 Artist Collaborations (Planned)
+Dear Self will expand its creative identity through collaborations with independent artists to create:
+- Background artwork  
+- Paper textures  
+- Journal layout styles  
+- Themed visual packs  
+
+These collaborations will allow users to shape their space through diverse creative voices.
+
+---
+
+## ☁️ Account & Sync (Future)
+- Optional user accounts  
+- Encrypted cloud sync across devices  
+- Backup + restore options  
+
+---
+
+## 📤 Exporting & Sharing
+- Export entries to **PDF**  
+- “Print-ready” journaling layouts  
+- Yearly summary export  
+
+---
+
+## 🤖 Optional AI-Assisted Features (Long-Term)
+Soft, supportive, opt-in-only AI features:
+- Gentle journaling prompts  
+- Emotional summaries  
+- Kind-tone rewrite suggestions  
+- Reflection guidance  
+
+---
+
+# 🧱 Tech Stack
+
+- **React** (Hooks, functional components)  
 - **React Router**  
-- **CSS** (App.css, PastEntries.css, theme.css)  
-- **LocalStorage** for persistence  
-- **Utility-based architecture**  
-- **Custom theming engine**  
+- **CSS Modules** (App.css, PastEntries.css, theme.css)  
+- **LocalStorage** for all persistence  
+- **Custom theme utilities**  
+- **Structured services** for daily logic, streaks, and session behavior  
 
 ---
 
-## 📂 Project Structure
+# 📂 Project Structure
 
 ```text
 DEAR-SELF/
@@ -152,95 +209,29 @@ DEAR-SELF/
 
 ---
 
-## 🚀 Running Dear Self Locally
+# ✍️ Motivation
 
-### 1️⃣ Clone the repository
+Dear Self was created to be a **digital sanctuary** — a place that meets you exactly where you are.  
+It avoids productivity metrics, pressure, and noise, focusing instead on calm ritual,  
+creative expression, and emotional safety.
 
-```bash
-git clone https://github.com/heathergauthier2018/Dear-Self.git
-cd Dear-Self
-```
-
-### 2️⃣ Install dependencies
-
-```bash
-npm install
-```
-
-### 3️⃣ Start the dev server
-
-```bash
-npm start
-```
-
-### 4️⃣ Build the production bundle
-
-```bash
-npm run build
-```
+It is a journal you can make **truly yours**, today and as it grows.
 
 ---
 
-## 🧩 Architecture Overview
-
-### **DailyMoment System**
-- Pulls a random affirmation  
-- Generates a gentle challenge  
-- Assigns a daily soft theme  
-- Bundles into a single DayObject  
-- Stored safely in LocalStorage  
-
-### **Journal System**
-- Writing modes  
-- Texture engine  
-- Autosave logic  
-- Past entry retrieval  
-- Entry editing & rewriting  
-
-### **Calendar System**
-- Days appear only when the user opens the app  
-- No penalty for missed days  
-- Tap-to-view previous content  
-
-### **Theme Studio**
-- Pre-built theme packs  
-- Color, font, and texture customization  
-- Real-time preview engine  
-
----
-
-## 🧪 Tests
-
-- **Jest**  
-- **React Testing Library**  
-- Includes baseline test coverage (`App.test.js`)  
-- Additional tests planned for:
-  - Theme studio behavior  
-  - Past entries logic  
-  - Calendar edge cases  
-
----
-
-## ✍️ Developer Motivation
-
-Dear Self is intended to be a **digital sanctuary**—not a productivity tracker.  
-It is soft. It is slow. It is a place to breathe, explore, and reflect without pressure.
-
----
-
-## 📝 License — All Rights Reserved
+# 📝 License — All Rights Reserved
 
 **Dear Self © 2025 — Heather Gauthier**
 
-All code, assets, UI designs, writing, artwork, and branding are fully owned by the creator.
+All code, designs, themes, artwork, written content, prompts, and visual assets are the exclusive property of the creator.
 
 ### You MAY NOT:
-- Copy or reuse the code  
+- Copy, reuse, or distribute the code  
 - Reproduce UI designs, themes, or artwork  
-- Distribute or modify this project  
+- Modify or repurpose the project  
 - Use it in personal, academic, or commercial work  
 - Incorporate it into other software  
 - Sell or sublicense any part of the project  
 
-For permission or licensing inquiries:  
+For licensing inquiries  
 📧 **heathergauthier18@gmail.com**
