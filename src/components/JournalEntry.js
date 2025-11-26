@@ -497,7 +497,7 @@ export default function JournalEntry() {
             style={{
               background: '#fffef9',
               color: '#7c3e00',
-              border: '2px solid '#facc15',
+              border: '2px solid #facc15',
               borderRadius: 20,
               padding: '22px 28px',
               boxShadow: '0 30px 80px rgba(0,0,0,.25), 0 0 0 6px rgba(250,204,21,.25)',
