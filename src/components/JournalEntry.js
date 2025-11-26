@@ -262,11 +262,18 @@ export default function JournalEntry() {
   return (
     <div className="page-wrap" style={{ maxWidth: 860, margin: '0 auto', paddingInline: 14 }}>
       {/* ===== Affirmation Card (white) ===== */}
-      <section className="card shadow-md" style={{ background: '#fff', maxWidth: 860, margin: '0 auto' }}>
+      <section
+        className="card shadow-md"
+        style={{ background: '#fff', maxWidth: 860, margin: '0 auto' }}
+        data-testid="daily-moment-root"
+      >
         <h1 className="brand-subtitle page-title" style={{ textAlign: 'center', marginTop: 0 }}>Dear Self</h1>
         <div className="card-body" style={{ textAlign: 'center' }}>
           <div className="affirmation-line">
-            <strong>Affirmation:</strong> {stripAffPrefix(card.text || card.affirmation || '')}
+            <strong>Affirmation:</strong>{' '}
+            <span data-testid="daily-moment-text">
+              {stripAffPrefix(card.text || card.affirmation || '')}
+            </span>
           </div>
           <div className="challenge-line">
             <strong>Challenge:</strong>{' '}
@@ -289,6 +296,7 @@ export default function JournalEntry() {
               onClick={onToggleFav}
               aria-label="Favorite"
               title="Favorite"
+              data-testid="daily-moment-fav-toggle"
             >
               {isFav ? heartOn : heartOff}
             </button>
@@ -489,7 +497,7 @@ export default function JournalEntry() {
             style={{
               background: '#fffef9',
               color: '#7c3e00',
-              border: '2px solid #facc15',
+              border: '2px solid '#facc15',
               borderRadius: 20,
               padding: '22px 28px',
               boxShadow: '0 30px 80px rgba(0,0,0,.25), 0 0 0 6px rgba(250,204,21,.25)',
