@@ -1,535 +1,1013 @@
 // src/components/JournalEntry.js
-import React, { useEffect, useRef, useState } from 'react';
-import '../styles/App.css';
-import '../styles/theme.css';
+import React, { useEffect, useMemo, useRef, useState } from "react";
+
+import "../styles/App.css";
+import "../styles/theme.css";
 
 import {
   ensureTodayAffirmation,
   addEntry,
-  getUserPrefs,
-  setUserPrefs,
+  updateEntry,
   toggleFavorite,
   listFavorites,
-  listEntries, // ← needed for streak computation
-} from '../services/affirmationEngine';
+} from "../services/affirmationEngine";
 
-// ✅ use the existing utils component
-import StreakBadge from '../utils/StreakBadge.js';
+import { loadPrefs, savePrefs } from "../utils/prefs";
 
-/* ——— helpers ——— */
-const stripAffPrefix = (s = '') =>
-  s.replace(/^\s*.*?Affirmation\s*\d+\s*:\s*/i, '').replace(/^\[|\]$/g, '').trim();
-const stripChalPrefix = (s = '') =>
-  s.replace(/^\s*.*?Challenge\s*\d+\s*:\s*/i, '').replace(/^\[|\]$/g, '').trim();
-const themeOf = (a = {}) => a.category ?? a.theme ?? 'Daily';
-const ymd = (d = new Date()) =>
-  `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+import StreakBadge from "../utils/StreakBadge.js";
+import { getStreak, recordDailyVisit } from "../services/streak.js";
 
-/* ——— Journal font options ——— */
-const FONT_OPTIONS = [
-  { label: 'Inter (Sans)', value: 'Inter' },
-  { label: 'Poppins (Sans)', value: 'Poppins' },
-  { label: 'Montserrat (Sans)', value: 'Montserrat' },
-  { label: 'Raleway (Sans)', value: 'Raleway' },
-  { label: 'Josefin Sans (Sans)', value: 'Josefin Sans' },
-  { label: 'Quicksand (Sans)', value: 'Quicksand' },
-  { label: 'Nunito (Sans)', value: 'Nunito' },
-  { label: 'Merriweather (Serif)', value: 'Merriweather' },
-  { label: 'Lora (Serif)', value: 'Lora' },
-  { label: 'Playfair Display (Serif)', value: 'Playfair Display' },
-  { label: 'Cormorant Garamond', value: 'Cormorant Garamond' },
-  { label: 'Cinzel', value: 'Cinzel' },
-  { label: 'Libre Baskerville', value: 'Libre Baskerville' },
-  { label: 'Crimson Pro', value: 'Crimson Pro' },
-  { label: 'Caveat (Handwritten)', value: 'Caveat' },
-  { label: 'Patrick Hand (Hand)', value: 'Patrick Hand' },
-  { label: 'Handlee (Hand)', value: 'Handlee' },
-  { label: 'Indie Flower (Hand)', value: 'Indie Flower' },
-  { label: 'Shadows Into Light', value: 'Shadows Into Light' },
-  { label: 'Great Vibes (Script)', value: 'Great Vibes' },
-  { label: 'Sacramento (Script)', value: 'Sacramento' },
-  { label: 'Courier Prime (Mono)', value: 'Courier Prime' },
-];
+function SignaturePad() {
+  const canvasRef = useRef(null);
+  const drawingRef = useRef(false);
+  const [penPosition, setPenPosition] = useState({
+    x: 0,
+    y: 0,
+    visible: false,
+  });
 
-/* ——— Palette ——— */
-const COLORS = [
-  '#111111', '#2B2B2B', '#4A4A4A',
-  '#334155', '#475569',
-  '#1D4ED8', '#2563EB', '#0EA5E9',
-  '#6D28D9', '#9333EA',
-  '#0F766E', '#10B981', '#65A30D', '#3F6212',
-  '#7CA982', '#90A8A1',
-  '#B91C1C', '#E11D48', '#F43F5E',
-  '#EA580C', '#F59E0B',
-  '#8B5E3C', '#A26A3C',
-  '#F5AFC6', '#E9D5FF', '#C7D2FE', '#A7F3D0', '#D1FAE5', '#FDE68A', '#FECACA', '#BBD7C5',
-];
-
-/* ——— Theme thumbs loader ——— */
-const buildImageMap = () => {
-  const map = {};
-  try {
-    const req = require.context('../images', false, /\.(png|jpg|jpeg|gif|svg)$/);
-    req.keys().forEach((k) => { const f = k.replace('./',''); map[f] = req(k); });
-  } catch(_) {}
-  try {
-    const mods = import.meta.glob('../images/*.{png,jpg,jpeg,gif,svg}', { eager: true });
-    Object.entries(mods).forEach(([p,mod]) => { const f = p.split('/').pop(); map[f] = mod.default || mod; });
-  } catch(_) {}
-  return map;
-};
-const SRC_IMAGE_MAP = buildImageMap();
-const fromPublic = (name) => `${process.env.PUBLIC_URL || ''}/images/${name}`;
-const IMG = (name) => SRC_IMAGE_MAP[name] || fromPublic(name);
-
-const THEMES = {
-  seasonal1: IMG('seasonal1.png'), seasonal2: IMG('seasonal2.png'), seasonal3: IMG('seasonal3.png'),
-  seasonal4: IMG('seasonal4.png'), seasonal5: IMG('seasonal5.png'), seasonal6: IMG('seasonal6.png'),
-  seasonal7: IMG('seasonal7.png'),
-  nature1: IMG('nature1.png'), nature2: IMG('nature2.png'), nature3: IMG('nature3.png'), nature4: IMG('nature4.png'),
-  nature5: IMG('nature5.png'), nature6: IMG('nature6.png'), nature7: IMG('nature7.png'), nature8: IMG('nature8.png'),
-  nature9: IMG('nature9.png'), nature10: IMG('nature10.png'), nature11: IMG('nature11.png'), nature12: IMG('nature12.png'),
-  whimsical1: IMG('whimsical1.png'), whimsical2: IMG('whimsical2.png'), whimsical3: IMG('whimsical3.png'),
-  whimsical4: IMG('whimsical4.png'), whimsical5: IMG('whimsical5.png'), whimsical6: IMG('whimsical6.png'),
-  whimsical7: IMG('whimsical7.png'), whimsical8: IMG('whimsical8.png'), whimsical9: IMG('whimsical9.png'),
-  minimal1: IMG('minimal1.png'), minimal2: IMG('minimal2.png'), minimal3: IMG('minimal3.png'),
-  minimal4: IMG('minimal4.png'), minimal5: IMG('minimal5.png'), minimal6: IMG('minimal6.png'),
-  night1: IMG('night1.png'), night2: IMG('night2.png'), night3: IMG('night3.png'),
-  night4: IMG('night4.png'), night5: IMG('night5.png'), night6: IMG('night6.png'),
-  romantic1: IMG('romantic1.png'), romantic2: IMG('romantic2.png'), romantic3: IMG('romantic3.png'),
-  romantic4: IMG('romantic4.png'), romantic5: IMG('romantic5.png'), romantic6: IMG('romantic6.png'),
-  coquette1: IMG('coquette1.png'), coquette2: IMG('coquette2.png'), coquette3: IMG('coquette3.png'),
-  coquette4: IMG('coquette4.png'), coquette5: IMG('coquette5.png'), coquette6: IMG('coquette6.png'),
-  coquette7: IMG('coquette7.png'), coquette8: IMG('coquette8.png'),
-  florals1: IMG('florals1.png'), florals2: IMG('florals2.png'), florals3: IMG('florals3.png'),
-  florals4: IMG('florals4.png'), florals5: IMG('florals5.png'),
-};
-
-const THEME_GROUPS = [
-  { key: 'coquette', label: 'Coquette' },
-  { key: 'florals', label: 'Florals' },
-  { key: 'minimal', label: 'Minimal' },
-  { key: 'nature', label: 'Nature' },
-  { key: 'night', label: 'Night' },
-  { key: 'romantic', label: 'Romantic' },
-  { key: 'seasonal', label: 'Seasonal' },
-  { key: 'whimsical', label: 'Whimsical' },
-];
-
-/* Baseline text styles */
-const canvasStyles = {
-  date: {
-    textAlign: 'right',
-    fontSize: 'clamp(14px, 1.9vw, 20px)',
-    textShadow: '0 1px 0 rgba(255,255,255,.6)',
-    fontWeight: 700,
-  },
-  textarea: {
-    background: 'transparent',
-    border: 'none',
-    outline: 'none',
-    resize: 'none',
-    overflow: 'auto',
-    whiteSpace: 'pre-wrap',
-    overflowWrap: 'anywhere',
-    lineHeight: 1.6,
-    fontSize: 'clamp(14px, 1.9vw, 20px)',
-    textAlign: 'left',
-    boxSizing: 'border-box',
-  },
-};
-
-/* ——— Streak helpers (local) ——— */
-const dkey = (d) =>
-  `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-
-/** Returns the length of the current consecutive-day streak.
- * Chain must end at today (if you’ve saved today) or at yesterday (if not yet).
- * Any missed day breaks the streak.
- */
-function computeStreak(entries = []) {
-  const days = new Set(entries.map(e => dkey(new Date(e.iso))));
-  const today = new Date();
-  const yesterday = new Date(); yesterday.setDate(today.getDate() - 1);
-
-  const start =
-    days.has(dkey(today)) ? new Date(today) :
-    days.has(dkey(yesterday)) ? new Date(yesterday) : null;
-
-  if (!start) return 0;
-
-  let streak = 0;
-  const cursor = new Date(start);
-  while (days.has(dkey(cursor))) {
-    streak += 1;
-    cursor.setDate(cursor.getDate() - 1);
-  }
-  return streak;
-}
-
-export default function JournalEntry() {
-  const [prefs, setPrefs] = useState(() => getUserPrefs() || {});
   useEffect(() => {
-    const onStorage = (e) => {
-      if (!e || !e.key || e.key.includes('dearself.userprefs')) setPrefs(getUserPrefs() || {});
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const resize = () => {
+      const saved = localStorage.getItem("dearself.signature.v1");
+      const rect = canvas.getBoundingClientRect();
+      const scale = window.devicePixelRatio || 1;
+      canvas.width = Math.max(1, Math.round(rect.width * scale));
+      canvas.height = Math.max(1, Math.round(rect.height * scale));
+      const context = canvas.getContext("2d");
+      context.lineCap = "round";
+      context.lineJoin = "round";
+      context.strokeStyle = "#5b463b";
+      context.lineWidth = 1.25 * scale;
+
+      if (saved) {
+        const image = new Image();
+        image.onload = () =>
+          context.drawImage(image, 0, 0, canvas.width, canvas.height);
+        image.src = saved;
+      }
     };
-    window.addEventListener('storage', onStorage);
-    return () => window.removeEventListener('storage', onStorage);
+
+    resize();
+    window.addEventListener("resize", resize);
+    return () => window.removeEventListener("resize", resize);
   }, []);
 
-  const [card] = useState(() => ensureTodayAffirmation());
-  const [favs, setFavs] = useState(() => listFavorites());
-  const themeTag = themeOf(card);
-  const isFav = favs.some((f) => (f.id || f.text) === (card.id || card.text));
-
-  const [selectedTheme, setSelectedTheme] = useState({ key: 'romantic2', src: THEMES['romantic2'] });
-  const [fontFamily, setFontFamily] = useState('Merriweather');
-  const [fontColor, setFontColor] = useState('#2B2B2B');
-  const [fontSize, setFontSize] = useState(20);
-  const [isBold, setIsBold] = useState(false);
-  const [isItalic, setIsItalic] = useState(false);
-  const [entryText, setEntryText] = useState('');
-  const [savedToast, setSavedToast] = useState(false);
-
-  // 🔥 streak state
-  const [streak, setStreak] = useState(0);
-  // For “before vs after save” comparison
-  const prevStreakRef = useRef(0);
-
-  useEffect(() => {
-    const s = computeStreak(listEntries());
-    setStreak(s);
-    prevStreakRef.current = s;
-  }, []);
-
-  // Big center celebration (shown once per day on increments that are >= 2)
-  const [celebrate, setCelebrate] = useState(false);
-  const [celebrateValue, setCelebrateValue] = useState(0);
-
-  useEffect(() => {
-    // Always keep ref in sync as the user navigates
-    prevStreakRef.current = streak;
-  }, [streak]);
-
-  useEffect(() => {
-    const p = getUserPrefs() || {};
-    if (!p.selectedPaperKey) {
-      const seeded = { ...p, selectedPaperKey: 'romantic2' };
-      setUserPrefs(seeded); setPrefs(seeded);
-      setSelectedTheme({ key: 'romantic2', src: THEMES['romantic2'] });
-    } else if (THEMES[p.selectedPaperKey]) {
-      setSelectedTheme({ key: p.selectedPaperKey, src: THEMES[p.selectedPaperKey] });
-    }
-  }, []);
-
-  const onToggleFav = () => {
-    const after = toggleFavorite({ ...card, id: card.id || `${card.date}-${card.text}` });
-    setFavs(after);
+  const point = (event) => {
+    const rect = canvasRef.current.getBoundingClientRect();
+    return {
+      x: (event.clientX - rect.left) * (canvasRef.current.width / rect.width),
+      y: (event.clientY - rect.top) * (canvasRef.current.height / rect.height),
+    };
   };
 
-  const handleSave = () => {
-    const before = prevStreakRef.current;
-
-    addEntry(entryText, {
-      themeKey: selectedTheme?.key,
-      imageSrc: selectedTheme?.src || null,
-      fontFamily, fontColor, fontSize, bold: isBold, italic: isItalic, dateColor: fontColor,
+  const movePen = (event) => {
+    const rect = canvasRef.current.getBoundingClientRect();
+    setPenPosition({
+      x: event.clientX - rect.left,
+      y: event.clientY - rect.top,
+      visible: true,
     });
-
-    // Recompute streak right after save
-    const after = computeStreak(listEntries());
-    setStreak(after);
-    setSavedToast(true);
-    setTimeout(() => setSavedToast(false), 1800);
-    setEntryText('');
-
-    // 🎉 Show center celebration if the streak INCREASED and is now >= 2,
-    // but only once per day.
-    const todayKey = ymd(new Date());
-    const last = localStorage.getItem('dearself.lastCelebrated') || '';
-    if (after >= 2 && after > before && last !== todayKey) {
-      setCelebrateValue(after);
-      setCelebrate(true);
-      localStorage.setItem('dearself.lastCelebrated', todayKey);
-      setTimeout(() => setCelebrate(false), 3000);
-    }
   };
 
-  const heartOff = '🤍';
-  const heartOn = '❤️';
-  const activeGroup = (selectedTheme.key || '').split(/[0-9]/)[0] || 'romantic';
+  const beginDrawing = (event) => {
+    event.preventDefault();
+    movePen(event);
+    drawingRef.current = true;
+    event.currentTarget.setPointerCapture(event.pointerId);
+    const context = event.currentTarget.getContext("2d");
+    const { x, y } = point(event);
+    context.beginPath();
+    context.moveTo(x, y);
+  };
+
+  const draw = (event) => {
+    movePen(event);
+    if (!drawingRef.current) return;
+    event.preventDefault();
+    const context = event.currentTarget.getContext("2d");
+    const events = event.nativeEvent.getCoalescedEvents?.() || [
+      event.nativeEvent,
+    ];
+    events.forEach((nextEvent) => {
+      const { x, y } = point(nextEvent);
+      context.lineTo(x, y);
+      context.stroke();
+    });
+  };
+
+  const finishDrawing = (event) => {
+    if (!drawingRef.current) return;
+    drawingRef.current = false;
+    event.currentTarget.getContext("2d").closePath();
+    localStorage.setItem(
+      "dearself.signature.v1",
+      event.currentTarget.toDataURL(),
+    );
+  };
+
+  const clearSignature = () => {
+    const canvas = canvasRef.current;
+    const context = canvas.getContext("2d");
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    localStorage.removeItem("dearself.signature.v1");
+  };
 
   return (
-    <div className="page-wrap" style={{ maxWidth: 860, margin: '0 auto', paddingInline: 14 }}>
-      {/* ===== Affirmation Card (white) ===== */}
-      <section
-        className="card shadow-md"
-        style={{ background: '#fff', maxWidth: 860, margin: '0 auto' }}
-        data-testid="daily-moment-root"
-      >
-        <h1 className="brand-subtitle page-title" style={{ textAlign: 'center', marginTop: 0 }}>Dear Self</h1>
-        <div className="card-body" style={{ textAlign: 'center' }}>
-          <div className="affirmation-line">
-            <strong>Affirmation:</strong>{' '}
-            <span data-testid="daily-moment-text">
-              {stripAffPrefix(card.text || card.affirmation || '')}
-            </span>
-          </div>
-          <div className="challenge-line">
-            <strong>Challenge:</strong>{' '}
-            <span className="challenge-text">{stripChalPrefix(card.challenge || '')}</span>
-          </div>
+    <div className="diary-signature-pad">
+      <canvas
+        ref={canvasRef}
+        aria-label="Write your name in the journal"
+        onPointerEnter={movePen}
+        onPointerLeave={() =>
+          setPenPosition((current) => ({ ...current, visible: false }))
+        }
+        onPointerDown={beginDrawing}
+        onPointerMove={draw}
+        onPointerUp={finishDrawing}
+        onPointerCancel={finishDrawing}
+      />
+      <img
+        className={`diary-signature-pen ${penPosition.visible ? "visible" : ""}`}
+        src={`${process.env.PUBLIC_URL || ""}/images/pen-cursor.png`}
+        alt=""
+        aria-hidden="true"
+        style={{ left: `${penPosition.x}px`, top: `${penPosition.y}px` }}
+      />
+      <button type="button" onClick={clearSignature}>
+        Clear
+      </button>
+    </div>
+  );
+}
+
+/* =========================================================
+   HELPERS
+========================================================= */
+
+const stripAffPrefix = (value = "") =>
+  value
+    .replace(/^\s*.*?Affirmation\s*\d+\s*:\s*/i, "")
+    .replace(/^\[|\]$/g, "")
+    .trim();
+
+const stripChalPrefix = (value = "") =>
+  value
+    .replace(/^\s*.*?Challenge\s*\d+\s*:\s*/i, "")
+    .replace(/^\[|\]$/g, "")
+    .trim();
+
+/* =========================================================
+   DIARY ASSETS
+========================================================= */
+
+const DIARY_IMAGES = {
+  sage: {
+    open: "sage-open-journal.png",
+    closed: "sage-closed-journal.png",
+  },
+  blush: {
+    open: "blush-open-journal.png",
+    closed: "blush-closed-journal.png",
+  },
+  midnight: {
+    open: "midnight-open-journal.png",
+    closed: "midnight-closed-journal.png",
+  },
+};
+
+const WRITING_SPACES = [
+  {
+    key: "quiet-linen",
+    name: "Quiet Linen",
+    mood: "Clean, calm, and timeless.",
+  },
+  {
+    key: "botanical-calm",
+    name: "Botanical Calm",
+    mood: "Soft greenery for peaceful reflection.",
+  },
+  {
+    key: "moonlit-reflection",
+    name: "Moonlit Reflection",
+    mood: "A gentle evening space for deeper thoughts.",
+  },
+  {
+    key: "letter-to-me",
+    name: "Letter to Myself",
+    mood: "Warm, personal, and heartfelt.",
+  },
+];
+
+const getWritingSpace = (key) =>
+  WRITING_SPACES.find((space) => space.key === key) || WRITING_SPACES[0];
+
+const FONT_OPTIONS = [
+  { label: "Inter", value: "Inter" },
+  { label: "Poppins", value: "Poppins" },
+  { label: "Montserrat", value: "Montserrat" },
+  { label: "Raleway", value: "Raleway" },
+  { label: "Josefin Sans", value: "Josefin Sans" },
+  { label: "Quicksand", value: "Quicksand" },
+  { label: "Nunito", value: "Nunito" },
+  { label: "Merriweather", value: "Merriweather" },
+  { label: "Lora", value: "Lora" },
+  { label: "Playfair Display", value: "Playfair Display" },
+  { label: "Cormorant Garamond", value: "Cormorant Garamond" },
+  { label: "Cinzel", value: "Cinzel" },
+  { label: "Libre Baskerville", value: "Libre Baskerville" },
+  { label: "Crimson Pro", value: "Crimson Pro" },
+  { label: "Caveat", value: "Caveat" },
+  { label: "Patrick Hand", value: "Patrick Hand" },
+  { label: "Handlee", value: "Handlee" },
+  { label: "Indie Flower", value: "Indie Flower" },
+  { label: "Shadows Into Light", value: "Shadows Into Light" },
+  { label: "Great Vibes", value: "Great Vibes" },
+  { label: "Sacramento", value: "Sacramento" },
+  { label: "Courier Prime", value: "Courier Prime" },
+];
+
+const FONT_SIZES = [8, 10, 12, 14, 16, 18, 20, 24, 28, 32, 36, 48, 60, 72];
+
+const COLORS = [
+  "#111111",
+  "#2B2B2B",
+  "#4A4A4A",
+  "#334155",
+  "#475569",
+  "#1D4ED8",
+  "#2563EB",
+  "#0EA5E9",
+  "#6D28D9",
+  "#9333EA",
+  "#0F766E",
+  "#10B981",
+  "#65A30D",
+  "#3F6212",
+  "#7CA982",
+  "#90A8A1",
+  "#B91C1C",
+  "#E11D48",
+  "#F43F5E",
+  "#EA580C",
+  "#F59E0B",
+  "#8B5E3C",
+  "#A26A3C",
+  "#F5AFC6",
+  "#E9D5FF",
+  "#C7D2FE",
+  "#A7F3D0",
+  "#D1FAE5",
+  "#FDE68A",
+  "#FECACA",
+  "#BBD7C5",
+];
+
+/* =========================================================
+   COMPONENT
+========================================================= */
+
+export default function JournalEntry() {
+  const [appPrefs, setAppPrefs] = useState(() => loadPrefs());
+
+  const [card, setCard] = useState(() => ensureTodayAffirmation());
+  const [favorites, setFavorites] = useState(() => listFavorites());
+
+  const initialPaperKey = loadPrefs().selectedWritingSpaceKey || "quiet-linen";
+
+  const [selectedSpace, setSelectedSpace] = useState(() =>
+    getWritingSpace(initialPaperKey),
+  );
+
+  const [fontFamily, setFontFamily] = useState("Merriweather");
+  const [fontSearch, setFontSearch] = useState("Merriweather");
+  const [isFontMenuOpen, setIsFontMenuOpen] = useState(false);
+  const [fontColor, setFontColor] = useState("#2B2B2B");
+  const [fontSize, setFontSize] = useState(20);
+  const [fontSizeInput, setFontSizeInput] = useState("20");
+  const [isSizeMenuOpen, setIsSizeMenuOpen] = useState(false);
+  const [isBold, setIsBold] = useState(false);
+  const [isItalic, setIsItalic] = useState(false);
+
+  const [entryText, setEntryText] = useState("");
+  const [savedEntryId, setSavedEntryId] = useState(null);
+
+  const [isLocked, setIsLocked] = useState(false);
+  const [activeTool, setActiveTool] = useState(null);
+
+  const [toastMessage, setToastMessage] = useState("");
+  const savedToastTimer = useRef(null);
+
+  const initialVisit = useRef(null);
+  if (!initialVisit.current) initialVisit.current = recordDailyVisit();
+
+  const [streak, setStreak] = useState(initialVisit.current.value);
+  const [showStreak, setShowStreak] = useState(
+    initialVisit.current.isNewDay && initialVisit.current.value >= 2,
+  );
+  const streakTimer = useRef(null);
+
+  const activeTheme = ["sage", "blush", "midnight"].includes(
+    appPrefs.brandTheme,
+  )
+    ? appPrefs.brandTheme
+    : "sage";
+
+  const diaryImages = DIARY_IMAGES[activeTheme];
+
+  const publicPath = process.env.PUBLIC_URL || "";
+
+  const openDiarySrc = `${publicPath}/images/${diaryImages.open}`;
+  const closedDiarySrc = `${publicPath}/images/${diaryImages.closed}`;
+  const paperSrc = `${publicPath}/images/${selectedSpace.key}.png`;
+
+  const affirmation = stripAffPrefix(card.text || card.affirmation || "");
+
+  const challenge = stripChalPrefix(card.challenge || "");
+
+  const isFavorite = useMemo(
+    () =>
+      favorites.some(
+        (favorite) =>
+          favorite.id === card.id ||
+          (!favorite.id &&
+            favorite.date === card.date &&
+            favorite.text === card.text),
+      ),
+    [favorites, card],
+  );
+
+  /* =======================================================
+     LISTEN FOR SETTINGS/THEME CHANGES
+  ======================================================= */
+
+  useEffect(() => {
+    const refreshPrefs = () => {
+      setAppPrefs(loadPrefs());
+    };
+
+    const handleStorage = (event) => {
+      if (!event.key || event.key === "dearself.userprefs.v1") {
+        refreshPrefs();
+      }
+    };
+
+    window.addEventListener("dearself:prefs", refreshPrefs);
+    window.addEventListener("storage", handleStorage);
+
+    return () => {
+      window.removeEventListener("dearself:prefs", refreshPrefs);
+      window.removeEventListener("storage", handleStorage);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!showStreak) return undefined;
+    if (streakTimer.current) window.clearTimeout(streakTimer.current);
+    streakTimer.current = window.setTimeout(() => setShowStreak(false), 4200);
+    return () => {
+      if (streakTimer.current) window.clearTimeout(streakTimer.current);
+    };
+  }, [showStreak, streak]);
+
+  useEffect(() => {
+    let midnightTimer;
+
+    const refreshDailyState = () => {
+      const visit = recordDailyVisit();
+      const nextCard = ensureTodayAffirmation();
+
+      setCard(nextCard);
+      setFavorites(listFavorites());
+      setSavedEntryId(null);
+      setStreak(visit.value);
+
+      if (visit.isNewDay && visit.value >= 2) setShowStreak(true);
+    };
+
+    const scheduleMidnightRefresh = () => {
+      const now = new Date();
+      const nextMidnight = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate() + 1,
+        0,
+        0,
+        1,
+      );
+
+      midnightTimer = window.setTimeout(() => {
+        refreshDailyState();
+        scheduleMidnightRefresh();
+      }, nextMidnight.getTime() - now.getTime());
+    };
+
+    const refreshWhenReturning = () => {
+      if (!document.hidden) refreshDailyState();
+    };
+
+    scheduleMidnightRefresh();
+    window.addEventListener("focus", refreshWhenReturning);
+    document.addEventListener("visibilitychange", refreshWhenReturning);
+
+    return () => {
+      window.clearTimeout(midnightTimer);
+      window.removeEventListener("focus", refreshWhenReturning);
+      document.removeEventListener("visibilitychange", refreshWhenReturning);
+    };
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (savedToastTimer.current) {
+        window.clearTimeout(savedToastTimer.current);
+      }
+    };
+  }, []);
+
+  /* =======================================================
+     ACTIONS
+  ======================================================= */
+
+  const handleFavorite = () => {
+    const nextFavorites = toggleFavorite({
+      ...card,
+      id: card.id || `${card.date}-${card.text}`,
+    });
+
+    setFavorites(nextFavorites);
+  };
+
+  const handleSpaceChange = (space) => {
+    setSelectedSpace(space);
+
+    const next = savePrefs({
+      selectedWritingSpaceKey: space.key,
+    });
+
+    setAppPrefs(next);
+
+    window.dispatchEvent(new Event("dearself:prefs"));
+  };
+
+  const showJournalMessage = (message, duration = 1800) => {
+    setToastMessage(message);
+
+    if (savedToastTimer.current) {
+      window.clearTimeout(savedToastTimer.current);
+    }
+
+    savedToastTimer.current = window.setTimeout(() => {
+      setToastMessage("");
+    }, duration);
+  };
+
+  const getEntryStyle = () => ({
+    themeKey: selectedSpace.key,
+    writingSpace: selectedSpace.key,
+    imageSrc: paperSrc,
+    fontFamily,
+    fontColor,
+    dateColor: fontColor,
+    fontSize,
+    bold: isBold,
+    italic: isItalic,
+  });
+
+  const saveCurrentEntry = () => {
+    if (!entryText.trim()) {
+      showJournalMessage("This page is still waiting for your words.", 2600);
+      return false;
+    }
+
+    const style = getEntryStyle();
+
+    if (savedEntryId) {
+      const updated = updateEntry(savedEntryId, {
+        content: entryText,
+        style,
+      });
+
+      if (!updated) {
+        const newEntry = addEntry(entryText, style);
+        setSavedEntryId(newEntry.id);
+      }
+    } else {
+      const newEntry = addEntry(entryText, style);
+      setSavedEntryId(newEntry.id);
+    }
+
+    const nextStreak = getStreak();
+    setStreak(nextStreak);
+    showJournalMessage("Your entry has been saved.");
+    return true;
+  };
+
+  const handleClaspClick = () => {
+    if (isLocked) {
+      setIsLocked(false);
+      return;
+    }
+
+    if (!saveCurrentEntry()) return;
+    setActiveTool(null);
+    setIsLocked(true);
+  };
+
+  const formattedDate = new Date().toLocaleDateString(undefined, {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
+  /* =======================================================
+     CLOSED JOURNAL
+  ======================================================= */
+
+  if (isLocked) {
+    return (
+      <main className={`diary-experience diary-experience--${activeTheme}`}>
+        <header className="diary-page-heading">
+          <h1 className="page-title">Today</h1>
+          <p>Your thoughts are safely tucked away.</p>
+        </header>
+
+        <section className="closed-diary-stage">
+          <img
+            className="closed-diary-image"
+            src={closedDiarySrc}
+            alt={`${activeTheme} closed journal`}
+          />
+
+          <button
+            type="button"
+            className="closed-diary-lock-hitbox"
+            onClick={handleClaspClick}
+            aria-label="Unlock journal and continue writing"
+            title="Unlock journal"
+          />
+        </section>
+
+        <div className="closed-diary-status">
+          <button
+            type="button"
+            className="closed-diary-open-button"
+            onClick={handleClaspClick}
+          >
+            Unlock and continue writing
+          </button>
         </div>
 
-        {/* Footer: chip on the left, tools (streak + heart) on the right */}
-        <div className="card-footer" style={{ display: 'flex', alignItems: 'center', gap: 10, justifyContent: 'space-between' }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
-            {(prefs?.showCategoryChip ?? true) && <span className="chip">{themeTag}</span>}
-          </div>
-
-          <div className="card-actions" style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
-            {/* 🔥 badge hides itself for values < 2 */}
+        {showStreak && (
+          <div className="diary-streak-float">
             <StreakBadge value={streak} />
-
-            <button
-              className={`fav-btn ${isFav ? 'active' : ''}`}
-              onClick={onToggleFav}
-              aria-label="Favorite"
-              title="Favorite"
-              data-testid="daily-moment-fav-toggle"
-            >
-              {isFav ? heartOn : heartOff}
-            </button>
           </div>
+        )}
+
+        {toastMessage && (
+          <div className="diary-save-toast" role="status">
+            {toastMessage}
+          </div>
+        )}
+      </main>
+    );
+  }
+
+  /* =======================================================
+     OPEN JOURNAL
+  ======================================================= */
+
+  return (
+    <main
+      className={`diary-experience diary-experience--${activeTheme}`}
+      data-testid="daily-moment-root"
+    >
+      <header className="diary-page-heading">
+        <h1 className="page-title">Today</h1>
+      </header>
+
+      {showStreak && (
+        <div className="diary-streak-float">
+          <StreakBadge value={streak} />
         </div>
-      </section>
+      )}
 
-      <h2 className="brand-subtitle" style={{ textAlign: 'center', margin: '12px 0 8px' }}>
-        Reflect in your journal
-      </h2>
+      <section className="open-diary-workspace">
+        {/* Left-side tools */}
+        <aside className="diary-tool-rail" aria-label="Journal tools">
+          <img
+            className="diary-tool-rail__frame"
+            src={`${publicPath}/images/diary-toolbar-frame.png`}
+            alt=""
+            aria-hidden="true"
+          />
+          <button
+            type="button"
+            className={activeTool === "paper" ? "active" : ""}
+            aria-label="Choose journal paper"
+            title="Paper"
+            onClick={() =>
+              setActiveTool(activeTool === "paper" ? null : "paper")
+            }
+          >
+            <span className="diary-tool-emblem" aria-hidden="true">
+              <img
+                className="diary-tool-emblem__icon diary-tool-emblem__icon--paper"
+                src={`${publicPath}/images/diary-icon-paper.png`}
+                alt=""
+              />
+            </span>
+          </button>
 
-      {/* ===== Journal Card (white, image fills fully) ===== */}
-      <section className="journal-card shadow-md" style={{ background: '#fff', maxWidth: 860, margin: '0 auto', padding: 0 }}>
-        <div
-          style={{
-            position: 'relative',
-            width: '100%',
-            aspectRatio: '2 / 3',
-            borderRadius: 12,
-            overflow: 'hidden',
-            background: '#fff',
-          }}
-        >
-          {/* Paper image fills entire card */}
-          {selectedTheme?.src && (
+          <button
+            type="button"
+            className={activeTool === "style" ? "active" : ""}
+            aria-label="Choose writing type"
+            title="Type"
+            onClick={() =>
+              setActiveTool(activeTool === "style" ? null : "style")
+            }
+          >
+            <span className="diary-tool-emblem" aria-hidden="true">
+              <img
+                className="diary-tool-emblem__icon diary-tool-emblem__icon--type"
+                src={`${publicPath}/images/diary-icon-type.png`}
+                alt=""
+              />
+            </span>
+          </button>
+
+          <button
+            type="button"
+            className={activeTool === "ink" ? "active" : ""}
+            aria-label="Choose ink color"
+            title="Ink"
+            onClick={() => setActiveTool(activeTool === "ink" ? null : "ink")}
+          >
+            <span className="diary-tool-emblem" aria-hidden="true">
+              <img
+                className="diary-tool-emblem__icon diary-tool-emblem__icon--ink"
+                src={`${publicPath}/images/diary-icon-ink.png`}
+                alt=""
+              />
+            </span>
+          </button>
+
+          <button
+            type="button"
+            className={`diary-favorite-tool ${isFavorite ? "active" : ""}`}
+            onClick={handleFavorite}
+            aria-label={
+              isFavorite
+                ? "Remove affirmation from favorites"
+                : "Favorite this affirmation"
+            }
+            title={isFavorite ? "Remove favorite" : "Favorite affirmation"}
+          >
+            <span className="diary-tool-emblem" aria-hidden="true">
+              <img
+                className="diary-tool-emblem__icon diary-tool-emblem__icon--heart"
+                src={`${publicPath}/images/heart-doodle-v2.png?v=3`}
+                alt=""
+              />
+            </span>
+          </button>
+        </aside>
+
+        {activeTool && (
+          <section className="diary-tool-panel">
+            <button
+              type="button"
+              className="diary-tool-panel__close"
+              onClick={() => setActiveTool(null)}
+              aria-label="Close journal tools"
+            >
+              ×
+            </button>
+
+            {activeTool === "paper" && (
+              <>
+                <h2>Writing Space</h2>
+
+                <div className="diary-paper-options">
+                  {WRITING_SPACES.map((space) => (
+                    <button
+                      key={space.key}
+                      type="button"
+                      className={`diary-paper-option ${
+                        selectedSpace.key === space.key ? "active" : ""
+                      }`}
+                      onClick={() => handleSpaceChange(space)}
+                    >
+                      <img
+                        src={`${publicPath}/images/${space.key}.png`}
+                        alt=""
+                      />
+
+                      <span>{space.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {activeTool === "style" && (
+              <>
+                <h2>Writing Style</h2>
+
+                <label className="diary-control-field">
+                  <span>Font</span>
+
+                  <div className="diary-combobox diary-font-combobox">
+                    <input
+                      type="text"
+                      value={fontSearch}
+                      onFocus={() => setIsFontMenuOpen(true)}
+                      onChange={(event) => {
+                        setFontSearch(event.target.value);
+                        setIsFontMenuOpen(true);
+                      }}
+                      onBlur={() => {
+                        const exactFont = FONT_OPTIONS.find(
+                          (font) =>
+                            font.value.toLowerCase() ===
+                            fontSearch.trim().toLowerCase(),
+                        );
+                        if (exactFont) {
+                          setFontFamily(exactFont.value);
+                          setFontSearch(exactFont.label);
+                        } else {
+                          setFontSearch(fontFamily);
+                        }
+                      }}
+                      onKeyDown={(event) => {
+                        if (event.key === "ArrowDown") setIsFontMenuOpen(true);
+                        if (event.key === "Escape") setIsFontMenuOpen(false);
+                      }}
+                      role="combobox"
+                      aria-label="Writing font"
+                      aria-expanded={isFontMenuOpen}
+                      aria-controls="diary-font-menu"
+                    />
+
+                    <button
+                      type="button"
+                      className="diary-combobox__toggle"
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => setIsFontMenuOpen((open) => !open)}
+                      aria-label="Show font choices"
+                      aria-expanded={isFontMenuOpen}
+                    >
+                      <span aria-hidden="true" />
+                    </button>
+
+                    {isFontMenuOpen && (
+                      <div
+                        id="diary-font-menu"
+                        className="diary-combobox__menu diary-combobox__menu--fonts"
+                        role="listbox"
+                      >
+                        {FONT_OPTIONS.filter(
+                          (font) =>
+                            font.label
+                              .toLowerCase()
+                              .includes(fontSearch.trim().toLowerCase()) ||
+                            fontSearch === fontFamily,
+                        ).map((font) => (
+                          <button
+                            key={font.value}
+                            type="button"
+                            role="option"
+                            aria-selected={fontFamily === font.value}
+                            style={{ fontFamily: font.value }}
+                            onMouseDown={(event) => event.preventDefault()}
+                            onClick={() => {
+                              setFontFamily(font.value);
+                              setFontSearch(font.label);
+                              setIsFontMenuOpen(false);
+                            }}
+                          >
+                            {font.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </label>
+
+                <label className="diary-control-field">
+                  <span>Size</span>
+
+                  <div className="diary-combobox diary-size-combobox">
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      value={fontSizeInput}
+                      onChange={(event) => {
+                        const nextValue = event.target.value;
+                        setFontSizeInput(nextValue);
+
+                        if (/^\d{1,2}(?:\.\d)?$/.test(nextValue)) {
+                          const nextSize = Number(nextValue);
+                          if (nextSize >= 8 && nextSize <= 72) {
+                            setFontSize(nextSize);
+                          }
+                        }
+                      }}
+                      onBlur={() => {
+                        const nextSize = Number(fontSizeInput);
+                        const safeSize = Number.isFinite(nextSize)
+                          ? Math.min(
+                              72,
+                              Math.max(8, Math.round(nextSize * 2) / 2),
+                            )
+                          : 20;
+                        setFontSize(safeSize);
+                        setFontSizeInput(String(safeSize));
+                      }}
+                      onKeyDown={(event) => {
+                        if (event.key === "ArrowDown") setIsSizeMenuOpen(true);
+                        if (event.key === "Escape") setIsSizeMenuOpen(false);
+                      }}
+                      role="combobox"
+                      aria-label="Writing font size in pixels"
+                      aria-expanded={isSizeMenuOpen}
+                      aria-controls="diary-font-size-menu"
+                      placeholder="Type a size"
+                    />
+
+                    <button
+                      type="button"
+                      className="diary-combobox__toggle"
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => setIsSizeMenuOpen((open) => !open)}
+                      aria-label="Show common font sizes"
+                      aria-expanded={isSizeMenuOpen}
+                    >
+                      <span aria-hidden="true" />
+                    </button>
+
+                    {isSizeMenuOpen && (
+                      <div
+                        id="diary-font-size-menu"
+                        className="diary-combobox__menu diary-combobox__menu--sizes"
+                        role="listbox"
+                      >
+                        {FONT_SIZES.map((size) => (
+                          <button
+                            key={size}
+                            type="button"
+                            role="option"
+                            aria-selected={fontSize === size}
+                            onMouseDown={(event) => event.preventDefault()}
+                            onClick={() => {
+                              setFontSize(size);
+                              setFontSizeInput(String(size));
+                              setIsSizeMenuOpen(false);
+                            }}
+                          >
+                            {size}px
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </label>
+
+                <div className="diary-style-buttons">
+                  <button
+                    type="button"
+                    className={isBold ? "active" : ""}
+                    onClick={() => setIsBold((value) => !value)}
+                  >
+                    Bold
+                  </button>
+
+                  <button
+                    type="button"
+                    className={isItalic ? "active" : ""}
+                    onClick={() => setIsItalic((value) => !value)}
+                  >
+                    Italic
+                  </button>
+                </div>
+              </>
+            )}
+
+            {activeTool === "ink" && (
+              <>
+                <h2>Ink Color</h2>
+
+                <div className="diary-ink-options">
+                  {COLORS.map((color) => (
+                    <button
+                      key={color}
+                      type="button"
+                      className={fontColor === color ? "selected" : ""}
+                      style={{ backgroundColor: color }}
+                      onClick={() => setFontColor(color)}
+                      aria-label={`Use ink color ${color}`}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+          </section>
+        )}
+
+        {/* Physical diary */}
+        <div className="open-diary-stage">
+          <img
+            className="open-diary-image"
+            src={openDiarySrc}
+            alt={`${activeTheme} open journal`}
+          />
+
+          <SignaturePad />
+
+          {isFavorite && (
             <img
-              src={selectedTheme.src}
-              alt={selectedTheme.key}
-              style={{
-                position: 'absolute',
-                inset: 0,
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-                display: 'block',
-              }}
+              className="diary-drawn-heart"
+              src={`${publicPath}/images/heart-doodle-v2.png?v=3`}
+              alt="Favorited"
             />
           )}
 
-          {/* Overlay clipped to image */}
-          <div style={{ position: 'absolute', inset: 0, zIndex: 1 }}>
-            {/* Date */}
+          {/* Handwritten message on inside cover */}
+          <section className="diary-left-message">
+            <div className="diary-left-message__greeting">Dear Self,</div>
+
+            <p
+              className="diary-left-message__affirmation"
+              data-testid="daily-moment-text"
+            >
+              {affirmation}
+            </p>
+
+            <p className="diary-left-message__challenge-intro">
+              Today, I’ll gently challenge myself to...
+            </p>
+
+            <p className="diary-left-message__challenge">{challenge}</p>
+          </section>
+
+          {/* Selected journal artwork fitted to right page */}
+          <section className="diary-right-page">
+            <img
+              className="diary-paper-artwork"
+              src={paperSrc}
+              alt={selectedSpace.name}
+            />
+
             <div
+              className="diary-entry-date"
               style={{
-                position: 'absolute',
-                left: '7%',
-                right: '7%',
-                top: '4%',
-                ...canvasStyles.date,
                 color: fontColor,
                 fontFamily,
               }}
             >
-              {new Date().toLocaleDateString(undefined, {
-                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
-              })}
+              {formattedDate}
             </div>
 
-            {/* Textarea */}
             <textarea
+              className="diary-entry-textarea"
               value={entryText}
-              onChange={(e) => setEntryText(e.target.value)}
+              onChange={(event) => setEntryText(event.target.value)}
               placeholder="Write to yourself..."
-              className="journal-textarea"
+              spellCheck="true"
               style={{
-                position: 'absolute',
-                left: '7%',
-                right: '7%',
-                top: 'calc(5% + 44px)',
-                bottom: '8%',
-                ...canvasStyles.textarea,
                 color: fontColor,
                 fontFamily,
                 fontWeight: isBold ? 700 : 400,
-                fontStyle: isItalic ? 'italic' : 'normal',
+                fontStyle: isItalic ? "italic" : "normal",
                 fontSize: `${fontSize}px`,
               }}
             />
-          </div>
+          </section>
+
+          {/* Invisible button over the physical open clasp */}
+          <button
+            type="button"
+            className="open-diary-clasp-hitbox"
+            onClick={handleClaspClick}
+            aria-label="Save entry and lock journal"
+            title="Save and lock journal"
+          />
         </div>
       </section>
 
-      {/* ===== Customizer (white) ===== */}
-      <section className="customizer shadow-md" style={{ background: '#fff', maxWidth: 860, margin: '12px auto 0' }}>
-        <div className="topbar">
-          <button className="primary" onClick={handleSave}>Save Entry</button>
-        </div>
+      <p className="diary-lock-instruction">
+        Fasten the clasp when you are finished writing.
+      </p>
 
-        <div className="row gap">
-          <label className="field" style={{ minWidth: 240 }}>
-            <span>Journal Font</span>
-            <select value={fontFamily} onChange={(e) => setFontFamily(e.target.value)}>
-              {FONT_OPTIONS.map((f) => (<option key={f.value} value={f.value}>{f.label}</option>))}
-            </select>
-          </label>
-
-          <label className="field" style={{ minWidth: 180 }}>
-            <span>Font Size</span>
-            <select value={String(fontSize)} onChange={(e) => setFontSize(Number(e.target.value))}>
-              {[16,18,20,22,24,26,28,30].map(n => (<option key={n} value={n}>{n}px</option>))}
-            </select>
-          </label>
-
-          <div className="toggle-field">
-            <label className={`pill ${isBold ? 'active' : ''}`}>
-              <input type="checkbox" checked={isBold} onChange={(e) => setIsBold(e.target.checked)} /> Bold
-            </label>
-            <label className={`pill ${isItalic ? 'active' : ''}`}>
-              <input type="checkbox" checked={isItalic} onChange={(e) => setIsItalic(e.target.checked)} /> Italic
-            </label>
-          </div>
-        </div>
-
-        <div className="colors" style={{ marginTop: 10 }}>
-          <span className="field" style={{ fontWeight: 700, display: 'block', marginBottom: 6 }}>Font Color</span>
-          <div className="swatches">
-            {COLORS.map((c) => (
-              <button
-                key={c}
-                type="button"
-                className={`swatch ${fontColor === c ? 'selected' : ''}`}
-                onClick={() => setFontColor(c)}
-                style={{ background: c }}
-                aria-label={`Select color ${c}`}
-              />
-            ))}
-          </div>
-        </div>
-
-        <div style={{ marginTop: 18 }}>
-          <div className="tabs">
-            {THEME_GROUPS.map((g) => (
-              <button
-                key={g.key}
-                type="button"
-                className={`tab ${activeGroup === g.key ? 'active' : ''}`}
-                onClick={() => {
-                  const first = Object.keys(THEMES).find((k) => k.startsWith(g.key));
-                  if (first) {
-                    setSelectedTheme({ key: first, src: THEMES[first] });
-                    const p = getUserPrefs() || {};
-                    setUserPrefs({ ...p, selectedPaperKey: first });
-                    setPrefs({ ...p, selectedPaperKey: first });
-                  }
-                }}
-              >
-                {g.label}
-              </button>
-            ))}
-          </div>
-
-          <div className="thumb-grid">
-            {Object.entries(THEMES)
-              .filter(([key]) => key.startsWith(activeGroup))
-              .map(([key, src]) => (
-                <button
-                  type="button"
-                  key={key}
-                  className={`thumb ${selectedTheme.key === key ? 'active' : ''}`}
-                  onClick={() => {
-                    setSelectedTheme({ key, src });
-                    const p = getUserPrefs() || {};
-                    setUserPrefs({ ...p, selectedPaperKey: key });
-                    setPrefs({ ...p, selectedPaperKey: key });
-                  }}
-                  title={key}
-                >
-                  <img src={src} alt={key} />
-                  <span className="thumb-label">{key}</span>
-                </button>
-              ))}
-          </div>
-        </div>
-      </section>
-
-      {savedToast && (
-        <div className="undo-bar" role="status" aria-live="polite" style={{ background: '#14532d' }}>
-          <span>Saved!</span>
+      {toastMessage && (
+        <div className="diary-save-toast" role="status">
+          {toastMessage}
         </div>
       )}
-
-      {/* 🎉 Center celebration overlay */}
-      {celebrate && (
-        <div
-          role="status"
-          aria-live="polite"
-          style={{
-            position: 'fixed',
-            inset: 0,
-            zIndex: 9999,
-            display: 'grid',
-            placeItems: 'center',
-            background: 'rgba(0,0,0,.18)',
-            animation: 'fadeBackdrop 300ms ease',
-          }}
-        >
-          <div
-            style={{
-              background: '#fffef9',
-              color: '#7c3e00',
-              border: '2px solid #facc15',
-              borderRadius: 20,
-              padding: '22px 28px',
-              boxShadow: '0 30px 80px rgba(0,0,0,.25), 0 0 0 6px rgba(250,204,21,.25)',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 14,
-              transform: 'scale(1)',
-              animation: 'popIn 420ms cubic-bezier(.2,1.3,.3,1)',
-              fontWeight: 800,
-              fontSize: 20,
-            }}
-          >
-            <span style={{ fontSize: 28 }}>🔥</span>
-            <span style={{ fontVariantNumeric: 'tabular-nums' }}>
-              {celebrateValue} {celebrateValue === 1 ? 'day' : 'day'} streak!
-            </span>
-          </div>
-
-          {/* Keyframe helpers (scoped via inline <style>) */}
-          <style>{`
-            @keyframes popIn {
-              0% { transform: scale(.8); opacity: 0 }
-              40% { transform: scale(1.12); opacity: 1 }
-              70% { transform: scale(.98) }
-              100% { transform: scale(1) }
-            }
-            @keyframes fadeBackdrop {
-              from { opacity: 0 } to { opacity: 1 }
-            }
-          `}</style>
-        </div>
-      )}
-    </div>
+    </main>
   );
 }

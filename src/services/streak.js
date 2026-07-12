@@ -1,47 +1,94 @@
-// Computes the current consecutive-day journaling streak.
-// Rules:
-// - Streak counts *calendar days* with at least one saved entry.
-// - Must include *today* to be non-zero.
-// - Breaks on any missed day.
-// - Only shows once it reaches 2+ days (the UI component hides <2).
-import { listEntries } from './affirmationEngine';
+// src/services/streak.js
+// A streak is one consecutive local-calendar-day check-in on the Today page.
+// Existing saved-entry dates are merged in so upgrading does not erase history.
+import { listEntries } from "./affirmationEngine";
 
-const ymd = (d) => {
-  const yy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const dd = String(d.getDate()).padStart(2, '0');
-  return `${yy}-${mm}-${dd}`;
+const CHECKIN_KEY = "dearself.streak.checkins.v2";
+
+const ymd = (date = new Date()) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 };
 
-const addDays = (d, delta) => {
-  const x = new Date(d);
-  x.setDate(x.getDate() + delta);
-  return x;
-};
-
-export function getStreak() {
-  const items = listEntries();
-  if (!Array.isArray(items) || items.length === 0) return 0;
-
-  // Build a Set of unique YYYY-MM-DD that have at least one entry
-  const daysWithEntries = new Set(
-    items
-      .map((e) => (e?.iso ? new Date(e.iso) : null))
-      .filter(Boolean)
-      .map((d) => ymd(d))
+const fromYmd = (value) => {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value || "");
+  if (!match) return null;
+  const date = new Date(
+    Number(match[1]),
+    Number(match[2]) - 1,
+    Number(match[3]),
   );
+  return Number.isNaN(date.getTime()) ? null : date;
+};
 
-  let streak = 0;
-  let cursor = new Date(); // today (local time)
+const addDays = (date, amount) => {
+  const next = new Date(date);
+  next.setDate(next.getDate() + amount);
+  return next;
+};
 
-  // If no entry today, streak is zero by definition
-  if (!daysWithEntries.has(ymd(cursor))) return 0;
+const readCheckins = () => {
+  try {
+    const saved = JSON.parse(localStorage.getItem(CHECKIN_KEY) || "[]");
+    return Array.isArray(saved) ? saved.filter((day) => fromYmd(day)) : [];
+  } catch {
+    return [];
+  }
+};
 
-  // Count back from today while days are present
-  while (daysWithEntries.has(ymd(cursor))) {
-    streak += 1;
+const entryDays = () =>
+  listEntries()
+    .map((entry) => (entry?.iso ? new Date(entry.iso) : null))
+    .filter((date) => date && !Number.isNaN(date.getTime()))
+    .map(ymd);
+
+const allRecordedDays = () => new Set([...readCheckins(), ...entryDays()]);
+
+const writeCheckins = (days) => {
+  try {
+    localStorage.setItem(
+      CHECKIN_KEY,
+      JSON.stringify([...new Set(days)].sort()),
+    );
+  } catch {
+    // Storage may be unavailable in private browsing; the UI can still continue.
+  }
+};
+
+export function getStreak(referenceDate = new Date()) {
+  const days = allRecordedDays();
+  const todayKey = ymd(referenceDate);
+
+  // A current streak must include today.
+  if (!days.has(todayKey)) return 0;
+
+  let count = 0;
+  let cursor = fromYmd(todayKey);
+
+  while (cursor && days.has(ymd(cursor))) {
+    count += 1;
     cursor = addDays(cursor, -1);
   }
 
-  return streak;
+  return count;
+}
+
+export function recordDailyVisit(referenceDate = new Date()) {
+  const todayKey = ymd(referenceDate);
+  const checkins = readCheckins();
+  const alreadyRecorded = checkins.includes(todayKey);
+
+  if (!alreadyRecorded) writeCheckins([...checkins, todayKey]);
+
+  return {
+    value: getStreak(referenceDate),
+    isNewDay: !alreadyRecorded,
+    day: todayKey,
+  };
+}
+
+export function getRecordedStreakDays() {
+  return [...allRecordedDays()].sort();
 }

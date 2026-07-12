@@ -10,12 +10,11 @@ body {
 }
 
 .App {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 2rem 1rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  width: 100%;
+  max-width: none;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
 }
 
 .page-wrapper {
@@ -1320,187 +1319,7 @@ main {
 :root {
   --journal-text: #2E2E2E;
 }
-/* === Fit the entire journal page on screen (no scroll) === */
-.journal-card {
-  background: #fff9f1;
-  padding: 10px 8px;          /* smaller chrome so more room for the canvas */
-}
 
-.journal-canvas {
-  position: relative;
-  aspect-ratio: 2 / 3;        /* width : height */
-  height: clamp(520px, 62vh, 680px);  /* ← this is the key: size by viewport height */
-  width: auto;                /* computed from aspect-ratio + height */
-  margin: 0 auto;
-  border-radius: 12px;
-  overflow: hidden;
-}
-
-/* Paper image scales to the canvas */
-.journal-img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-
-/* Overlay + safe areas stay the same */
-.journal-overlay { position: absolute; inset: 0; }
-
-.journal-date {
-  font-size: clamp(14px, 1.9vw, 20px);
-  text-shadow: 0 1px 0 rgba(255,255,255,.6);
-}
-
-/* Text area scrolls INSIDE the page, not the window */
-.journal-textarea {
-  position: absolute;
-  left: 7%;
-  right: 7%;
-  top: calc(5% + 26px);
-  bottom: 8%;
-  background: transparent;
-  border: none;
-  outline: none;
-  resize: none;
-  overflow: auto;
-  white-space: pre-wrap;
-  line-height: 1.6;
-  /* keep typography responsive but readable */
-  font-size: clamp(14px, 1.9vw, 20px);
-}
-
-/* Optional: tighten the heading space above the canvas */
-.brand-subtitle {
-  margin-top: 6px;
-  margin-bottom: 8px;
-}
-/* =========================
-   Central column + tighter cards
-   ========================= */
-.page-wrap {
-  max-width: 980px;              /* narrower overall layout */
-  margin: 0 auto;
-  padding-inline: 14px;
-}
-
-.card,
-.journal-card,
-.customizer {
-  max-width: 980px;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-/* =========================
-   Journal canvas sizing
-   - keep full page visible (no window scroll)
-   - center the page
-   ========================= */
-.journal-card {
-  background: #fff9f1;
-  padding: 10px 8px;
-  border-radius: 14px;
-}
-
-.journal-canvas {
-  /* page-shaped area */
-  position: relative;
-  aspect-ratio: 2 / 3;            /* width : height of the paper */
-  height: clamp(520px, 58vh, 640px);   /* size by viewport height */
-  width: auto;                     /* width derives from aspect ratio */
-  margin: 0 auto;                  /* center inside the card */
-  border-radius: 12px;
-  overflow: hidden;
-  background: transparent;         /* no beige side banding */
-}
-
-/* The paper image always fills the canvas */
-.journal-img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  display: block;
-  object-fit: contain;
-  pointer-events: none;
-}
-
-/* Make sure overlay is pinned to the canvas, not the card */
-.journal-overlay {
-  position: absolute;              /* key: position against .journal-canvas */
-  inset: 0;                        /* exactly on top of the paper */
-}
-
-/* Date line on the page */
-.journal-date {
-  position: absolute;
-  top: 5%;
-  right: 7%;
-  left: 7%;
-  text-align: right;
-  font-size: clamp(14px, 1.9vw, 20px);
-  text-shadow: 0 1px 0 rgba(255,255,255,.6);
-}
-
-/* Text area lives *inside* the page, never in the gutter */
-.journal-textarea {
-  position: absolute;              /* <- ensures it’s constrained to the canvas */
-  left: 7%;
-  right: 7%;
-  top: calc(5% + 28px);
-  bottom: 8%;
-
-  background: transparent;
-  border: none;
-  outline: none;
-  resize: none;
-
-  overflow: auto;                  /* long entries scroll inside the page */
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-  line-height: 1.6;
-
-  font-size: clamp(14px, 1.9vw, 20px);
-}
-
-/* Slightly tighter spacing above the page */
-.brand-subtitle {
-  margin-top: 6px;
-  margin-bottom: 8px;
-}
-/* === Today page: keep long entries inside the paper & scroll within === */
-.journal-canvas { position: relative; }
-
-.journal-img{
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  pointer-events: none;
-  border-radius: inherit;
-}
-
-.journal-textarea{
-  position: absolute;
-  left: 7%;
-  right: 7%;
-  top: calc(5% + 28px); /* below the date */
-  bottom: 8%;
-  box-sizing: border-box;
-  padding: 0;
-  background: transparent;
-  border: none;
-  outline: none;
-  resize: none;
-  overflow: auto;              /* scrolls inside the page */
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-  line-height: 1.6;
-  font-size: clamp(14px, 1.9vw, 20px);
-}
 /* ===== Streak badge ===== */
 .streak-badge {
   display: inline-flex;
@@ -1538,4 +1357,164 @@ body.dark-mode .streak-badge {
 @keyframes ds-pill {
   0%, 100% { transform: translateZ(0) scale(1); }
   50% { transform: translateZ(0) scale(1.03); }
+}
+
+/* =====================================================
+   DEAR SELF — JOURNAL PAGE + CUSTOMIZER
+===================================================== */
+
+.journal-card.shadow-md {
+  width: min(540px, 90vw) !important;
+  max-width: 540px !important;
+  margin: 0 auto 18px !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.journal-page-shell {
+  position: relative !important;
+  width: min(620px, 92vw) !important;
+  max-width: 620px !important;
+  aspect-ratio: 2 / 3 !important;
+  margin: 0 auto !important;
+  border-radius: 22px !important;
+  overflow: hidden !important;
+  background: transparent !important;
+  box-shadow: 0 18px 44px rgba(48, 34, 22, 0.14) !important;
+  line-height: 0 !important;
+  font-size: 0 !important;
+}
+
+.journal-page-img {
+  position: absolute !important;
+  inset: 0 !important;
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  object-fit: fill !important;
+  border-radius: inherit !important;
+}
+
+.journal-overlay {
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 2 !important;
+}
+
+.journal-date {
+  position: absolute !important;
+  top: 7.5% !important;
+  right: 12% !important;
+  left: 12% !important;
+  text-align: right !important;
+  font-weight: 700 !important;
+  font-size: clamp(11px, 1vw, 14px) !important;
+  opacity: 0.72 !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.journal-textarea {
+  position: absolute !important;
+  left: 12% !important;
+  right: 12% !important;
+  top: 12% !important;
+  bottom: 12% !important;
+  width: auto !important;
+  height: auto !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  outline: none !important;
+  box-shadow: none !important;
+  resize: none !important;
+  overflow: auto !important;
+  line-height: 1.7 !important;
+}
+
+.customizer.shadow-md {
+  width: min(540px, 90vw) !important;
+  max-width: 540px !important;
+  margin: 14px auto 0 !important;
+  padding: 18px !important;
+  border-radius: 24px !important;
+  background: rgba(255, 253, 248, 0.96) !important;
+}
+
+.customizer .topbar {
+  justify-content: flex-end !important;
+  margin-bottom: 12px !important;
+}
+
+.customizer .row.gap {
+  display: grid !important;
+  grid-template-columns: 1fr 110px auto !important;
+  gap: 10px !important;
+  align-items: end !important;
+}
+
+.toggle-field {
+  display: grid !important;
+  gap: 8px !important;
+}
+
+.swatches {
+  gap: 6px !important;
+}
+
+.swatch {
+  width: 23px !important;
+  height: 23px !important;
+}
+
+.writing-space-picker {
+  margin-top: 16px !important;
+  padding-top: 16px !important;
+}
+
+.writing-space-grid {
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 8px !important;
+}
+
+.writing-space-option {
+  min-height: unset !important;
+  padding: 8px !important;
+  border-radius: 16px !important;
+  gap: 7px !important;
+}
+
+.writing-space-preview {
+  width: 100% !important;
+  height: 82px !important;
+  object-fit: cover !important;
+  object-position: top center !important;
+  border-radius: 12px !important;
+}
+
+.writing-space-option__text strong {
+  font-size: 0.78rem !important;
+  line-height: 1.1 !important;
+}
+
+.writing-space-option__text small {
+  font-size: 0.68rem !important;
+  line-height: 1.15 !important;
+}
+
+@media (max-width: 700px) {
+  .customizer .row.gap,
+  .writing-space-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .writing-space-preview {
+    height: 110px !important;
+  }
 }

@@ -1,271 +1,409 @@
 // src/components/Settings.js
-import React, { useEffect, useMemo, useState } from 'react';
-import '../styles/theme.css';
-import { loadPrefs, savePrefs, applyPrefsToDOM } from '../utils/prefs';
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import "../styles/theme.css";
+import "../styles/Settings.css";
+import {
+  applyPrefsToDOM,
+  DEFAULT_PREFS,
+  loadPrefs,
+  resetPrefs,
+  savePrefs,
+} from "../utils/prefs";
 
-const THEME_OPTIONS = [
-  { id: 'sage', label: 'Sage' },
-  { id: 'blush', label: 'Blush' },
-  { id: 'midnight', label: 'Midnight' },
+const THEMES = [
+  { id: "blush", label: "Blush", colors: ["#f0c9d1", "#ce6b80"] },
+  { id: "sage", label: "Sage", colors: ["#a4c3b4", "#5c947a"] },
+  { id: "midnight", label: "Midnight", colors: ["#657ab8", "#1f3a77"] },
 ];
 
 const HEADER_FONTS = [
-  // Serifs
-  { id: 'merriweather', label: 'Merriweather (Serif)' },
-  { id: 'playfair',     label: 'Playfair Display (Serif)' },
-  { id: 'lora',         label: 'Lora (Serif)' },
-  { id: 'cormorant',    label: 'Cormorant Garamond (Serif)' },
-  { id: 'cinzel',       label: 'Cinzel (Classic Serif)' },
-  { id: 'librebask',    label: 'Libre Baskerville (Serif)' },
-  { id: 'crimson',      label: 'Crimson Pro (Serif)' },
-  // Sans / modern
-  { id: 'inter',        label: 'Inter (Sans)' },
-  { id: 'montserrat',   label: 'Montserrat (Sans)' },
-  { id: 'poppins',      label: 'Poppins (Sans)' },
-  { id: 'raleway',      label: 'Raleway (Sans)' },
-  { id: 'josefin',      label: 'Josefin Sans (Art-Deco Sans)' },
-  { id: 'quicksand',    label: 'Quicksand (Soft Sans)' },
-  { id: 'nunito',       label: 'Nunito (Rounded Sans)' },
-  // Display / Script
-  { id: 'bebas',        label: 'Bebas Neue (Display)' },
-  { id: 'abril',        label: 'Abril Fatface (Display)' },
-  { id: 'greatvibes',   label: 'Great Vibes (Script)' },
-  { id: 'sacramento',   label: 'Sacramento (Script)' },
-];
+  ["merriweather", "Merriweather"],
+  ["playfair", "Playfair Display"],
+  ["lora", "Lora"],
+  ["cormorant", "Cormorant Garamond"],
+  ["cinzel", "Cinzel"],
+  ["librebask", "Libre Baskerville"],
+  ["crimson", "Crimson Pro"],
+  ["inter", "Inter"],
+  ["montserrat", "Montserrat"],
+  ["poppins", "Poppins"],
+  ["raleway", "Raleway"],
+  ["josefin", "Josefin Sans"],
+  ["quicksand", "Quicksand"],
+  ["nunito", "Nunito"],
+  ["bebas", "Bebas Neue"],
+  ["abril", "Abril Fatface"],
+  ["greatvibes", "Great Vibes"],
+  ["sacramento", "Sacramento"],
+].map(([id, label]) => ({ id, label }));
 
-const WIDTHS = [
-  { label: 'Narrow (840px)', value: '840px' },
-  { label: 'Standard (950px)', value: '950px' },
-  { label: 'Wide (1100px)', value: '1100px' },
-];
+const TEXTURES = ["none", "linen", "plaid", "grid", "dots"];
+const NAV_META = {
+  today: { label: "Today", mark: "01" },
+  past: { label: "Past Entries", mark: "02" },
+  favorites: { label: "Favorites", mark: "03" },
+  settings: { label: "Settings", mark: "04" },
+};
 
-const MOTION = [
-  { id: 'off', label: 'Off' },
-  { id: 'low', label: 'Subtle' },
-  { id: 'standard', label: 'Lively' },
-];
-
-// The only tabs we support (always visible)
-const NAV_KEYS = ['today', 'past', 'favorites', 'settings'];
-
-const DATE_FORMATS = [
-  { id: 'long',   sample: new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) },
-  { id: 'medium', sample: new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) },
-  { id: 'short',  sample: new Date().toLocaleDateString(undefined) },
-];
-
-const TIMEZONES = Intl.supportedValuesOf ? Intl.supportedValuesOf('timeZone') : [
-  'America/Chicago','America/New_York','America/Denver','America/Los_Angeles','Europe/London'
-];
+const DEAR_SELF_PREFIX = "dearself.";
 
 export default function Settings() {
-  const base = useMemo(() => loadPrefs(), []);
-  const [prefs, setPrefs] = useState(base);
+  const initial = useMemo(() => loadPrefs(), []);
+  const [prefs, setPrefs] = useState(initial);
+  const [notice, setNotice] = useState("");
+  const [confirmClear, setConfirmClear] = useState(false);
+  const importRef = useRef(null);
+  const noticeTimer = useRef(null);
 
-  useEffect(() => { applyPrefsToDOM(prefs); }, []);
+  useEffect(() => {
+    applyPrefsToDOM(prefs);
+  }, []);
+  useEffect(() => () => window.clearTimeout(noticeTimer.current), []);
 
-  // Dispatch a small event so App.js can react (reorder nav immediately)
-  const broadcast = () => window.dispatchEvent(new Event('dearself:prefs'));
+  const announce = (message) => {
+    setNotice(message);
+    window.clearTimeout(noticeTimer.current);
+    noticeTimer.current = window.setTimeout(() => setNotice(""), 2200);
+  };
+
+  const broadcast = () => window.dispatchEvent(new Event("dearself:prefs"));
 
   const save = (patch) => {
     const next = savePrefs(patch);
     setPrefs(next);
     applyPrefsToDOM(next);
     broadcast();
+    announce("Preferences saved");
   };
 
-  const moveNav = (key, dir) => {
-    const arr = [...prefs.navOrder];
-    const i = arr.indexOf(key);
-    if (i < 0) return;
-    const j = dir === 'up' ? i - 1 : i + 1;
-    if (j < 0 || j >= arr.length) return;
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-    save({ navOrder: arr });
+  const moveNav = (key, direction) => {
+    const next = [...prefs.navOrder];
+    const from = next.indexOf(key);
+    const to = direction === "up" ? from - 1 : from + 1;
+    if (from < 0 || to < 0 || to >= next.length) return;
+    [next[from], next[to]] = [next[to], next[from]];
+    save({ navOrder: next });
+  };
+
+  const exportBackup = () => {
+    const data = {};
+    for (let index = 0; index < localStorage.length; index += 1) {
+      const key = localStorage.key(index);
+      if (key?.startsWith(DEAR_SELF_PREFIX))
+        data[key] = localStorage.getItem(key);
+    }
+    const blob = new Blob(
+      [
+        JSON.stringify(
+          { version: 1, exportedAt: new Date().toISOString(), data },
+          null,
+          2,
+        ),
+      ],
+      { type: "application/json" },
+    );
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `dear-self-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+    announce("Journal backup created");
+  };
+
+  const importBackup = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    try {
+      const parsed = JSON.parse(await file.text());
+      if (!parsed?.data || typeof parsed.data !== "object") throw new Error();
+      Object.entries(parsed.data).forEach(([key, value]) => {
+        if (key.startsWith(DEAR_SELF_PREFIX) && typeof value === "string")
+          localStorage.setItem(key, value);
+      });
+      const next = loadPrefs();
+      setPrefs(next);
+      applyPrefsToDOM(next);
+      broadcast();
+      announce("Backup restored");
+    } catch {
+      announce("That backup could not be restored");
+    } finally {
+      event.target.value = "";
+    }
+  };
+
+  const restoreAppearance = () => {
+    const next = savePrefs({
+      brandTheme: DEFAULT_PREFS.brandTheme,
+      headerFont: DEFAULT_PREFS.headerFont,
+      siteBg: DEFAULT_PREFS.siteBg,
+      bgTexture: DEFAULT_PREFS.bgTexture,
+      siteWidth: DEFAULT_PREFS.siteWidth,
+      cardDensity: DEFAULT_PREFS.cardDensity,
+      compactUI: DEFAULT_PREFS.compactUI,
+      motion: DEFAULT_PREFS.motion,
+    });
+    setPrefs(next);
+    applyPrefsToDOM(next);
+    broadcast();
+    announce("Appearance restored");
+  };
+
+  const clearAllData = () => {
+    const keys = [];
+    for (let index = 0; index < localStorage.length; index += 1) {
+      const key = localStorage.key(index);
+      if (key?.startsWith(DEAR_SELF_PREFIX)) keys.push(key);
+    }
+    keys.forEach((key) => localStorage.removeItem(key));
+    const next = resetPrefs();
+    setPrefs(next);
+    applyPrefsToDOM(next);
+    broadcast();
+    setConfirmClear(false);
+    announce("Journal data cleared");
   };
 
   return (
-    <div className="page-wrap">
-      <section className="card shadow-md" style={{ background: '#FFF9F1' }}>
-        <h1 className="brand-subtitle page-title" style={{ textAlign: 'center', marginTop: 0 }}>Settings</h1>
+    <main className="page-wrap settings-page">
+      <section className="settings-shell">
+        <header className="settings-header">
+          <span>Make it feel like mine</span>
+          <h1 className="page-title">Settings</h1>
+          <p>A few thoughtful details, chosen by you.</p>
+        </header>
 
-        <div style={{ display: 'grid', gap: 16, marginTop: 8 }}>
+        <section
+          className="settings-preview"
+          aria-label="Current appearance preview"
+        >
+          <div
+            className="settings-preview__paper"
+            data-preview-texture={prefs.bgTexture}
+          >
+            <span className="page-title">Dear Self</span>
+            <strong>Little by little, day by day.</strong>
+            <div>
+              <i />
+              <i />
+              <i />
+            </div>
+          </div>
+          <div className="settings-preview__copy">
+            <span>Live preview</span>
+            <h2>Your journal, your way</h2>
+            <p>Theme, type, and texture update as you choose them.</p>
+            <small>Changes save automatically on this device.</small>
+          </div>
+        </section>
 
-          {/* Branding & Look */}
-          <fieldset className="fav-card" style={{ background: '#fff' }}>
-            <legend><strong>Branding & Look</strong></legend>
-            <div className="row" style={{ gap: 16, alignItems: 'center' }}>
-              <label className="field" style={{ minWidth: 200 }}>
-                <span>Theme</span>
-                <select
-                  value={prefs.brandTheme}
-                  onChange={e => save({ brandTheme: e.target.value })}
-                >
-                  {THEME_OPTIONS.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
-                </select>
-              </label>
-
-              <label className="field" style={{ minWidth: 200 }}>
-                <span>Header Font</span>
-                <select
-                  value={prefs.headerFont || 'merriweather'}
-                  onChange={e => save({ headerFont: e.target.value })}
-                >
-                  {HEADER_FONTS.map(f => <option key={f.id} value={f.id}>{f.label}</option>)}
-                </select>
-              </label>
-
-              <label className="field" style={{ minWidth: 220 }}>
-                <span>Background Color</span>
+        <section className="settings-section">
+          <header>
+            <span>01</span>
+            <div>
+              <h2>Appearance</h2>
+              <p>
+                Choose the colors and details that make the journal feel
+                personal.
+              </p>
+            </div>
+          </header>
+          <div className="settings-theme-grid">
+            {THEMES.map((theme) => (
+              <button
+                key={theme.id}
+                type="button"
+                className={prefs.brandTheme === theme.id ? "active" : ""}
+                onClick={() => save({ brandTheme: theme.id })}
+                aria-pressed={prefs.brandTheme === theme.id}
+              >
+                <span
+                  style={{
+                    "--swatch-one": theme.colors[0],
+                    "--swatch-two": theme.colors[1],
+                  }}
+                />
+                <strong>{theme.label}</strong>
+              </button>
+            ))}
+          </div>
+          <div className="settings-fields settings-fields--appearance">
+            <label>
+              <span>Heading font</span>
+              <select
+                value={prefs.headerFont}
+                onChange={(event) => save({ headerFont: event.target.value })}
+              >
+                {HEADER_FONTS.map((font) => (
+                  <option key={font.id} value={font.id}>
+                    {font.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="settings-color">
+              <span>Background color</span>
+              <div>
                 <input
                   type="color"
                   value={prefs.siteBg}
-                  onChange={e => save({ siteBg: e.target.value })}
-                  style={{ width: 64, height: 40, padding: 0, border: '1px solid #e5e7eb', borderRadius: 8 }}
+                  onChange={(event) => save({ siteBg: event.target.value })}
                 />
-              </label>
-
-              <label className="field" style={{ minWidth: 180 }}>
-                <span>Texture</span>
-                <select
-                  value={prefs.bgTexture}
-                  onChange={e => save({ bgTexture: e.target.value })}
-                >
-                  <option value="none">None</option>
-                  <option value="diagonal">Diagonal</option>
-                  <option value="dots">Soft Dots</option>
-                  <option value="grid">Grid</option>
-                  <option value="linen">Linen</option>
-                  <option value="plaid">Plaid</option>
-                </select>
-              </label>
-
-              <label className="field" style={{ minWidth: 200 }}>
-                <span>Page Width</span>
-                <select
-                  value={prefs.siteWidth}
-                  onChange={e => save({ siteWidth: e.target.value })}
-                >
-                  {WIDTHS.map(w => <option key={w.value} value={w.value}>{w.label}</option>)}
-                </select>
-              </label>
-
-              <label className="field" style={{ minWidth: 180 }}>
-                <span>UI Density</span>
-                <select
-                  value={prefs.cardDensity}
-                  onChange={e => save({ cardDensity: e.target.value })}
-                >
-                  <option value="cozy">Cozy</option>
-                  <option value="snug">Snug</option>
-                </select>
-              </label>
-
-              <label className="field" style={{ minWidth: 160 }}>
-                <span>Motion</span>
-                <select
-                  value={prefs.motion}
-                  onChange={e => save({ motion: e.target.value })}
-                >
-                  {MOTION.map(m => <option key={m.id} value={m.id}>{m.label}</option>)}
-                </select>
-              </label>
-
-              <label className="pill" style={{ cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={prefs.compactUI}
-                  onChange={e => save({ compactUI: e.target.checked })}
-                  style={{ marginRight: 8 }}
-                />
-                Compact mode
-              </label>
-            </div>
-          </fieldset>
-
-          {/* Navigation & Layout */}
-          <fieldset className="fav-card" style={{ background: '#fff' }}>
-            <legend><strong>Navigation & Layout</strong></legend>
-
-            <div>
-              <span style={{ fontWeight: 700, display: 'block', marginBottom: 6 }}>Tabs order</span>
-              <div style={{ display: 'grid', gap: 8 }}>
-                {prefs.navOrder.map(k => (
-                  <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <code style={{ minWidth: 120 }}>{k}</code>
-                    <button className="pill" onClick={() => moveNav(k, 'up')}>↑</button>
-                    <button className="pill" onClick={() => moveNav(k, 'down')}>↓</button>
-                  </div>
-                ))}
+                <code>{prefs.siteBg.toUpperCase()}</code>
               </div>
-              <small style={{ opacity:.7, display:'block', marginTop:8 }}>
-                The first tab becomes your default landing page.
-              </small>
-            </div>
-          </fieldset>
-
-          {/* Daily Card (non-journal) */}
-          <fieldset className="fav-card" style={{ background: '#fff' }}>
-            <legend><strong>Daily Card</strong></legend>
-            <div className="row" style={{ gap: 16, alignItems: 'center' }}>
-              <label className="field" style={{ minWidth: 220 }}>
-                <span>Order</span>
-                <select
-                  value={prefs.cardOrder}
-                  onChange={e => save({ cardOrder: e.target.value })}
+            </label>
+          </div>
+          <div className="settings-textures" aria-label="Background texture">
+            <span>Background texture</span>
+            <div>
+              {TEXTURES.map((texture) => (
+                <button
+                  key={texture}
+                  type="button"
+                  data-texture={texture}
+                  className={prefs.bgTexture === texture ? "active" : ""}
+                  onClick={() => save({ bgTexture: texture })}
+                  aria-pressed={prefs.bgTexture === texture}
                 >
-                  <option value="affirmation-first">Affirmation then Challenge</option>
-                  <option value="challenge-first">Challenge then Affirmation</option>
-                </select>
-              </label>
-
-              <label className="pill" style={{ cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={prefs.showCategoryChip}
-                  onChange={e => save({ showCategoryChip: e.target.checked })}
-                  style={{ marginRight: 8 }}
-                />
-                Show category chip
-              </label>
+                  <i />
+                  {texture === "none"
+                    ? "None"
+                    : texture[0].toUpperCase() + texture.slice(1)}
+                </button>
+              ))}
             </div>
-          </fieldset>
+          </div>
+        </section>
 
-          {/* Past Entries */}
-          <fieldset className="fav-card" style={{ background: '#fff' }}>
-            <legend><strong>Past Entries</strong></legend>
-            <div className="row" style={{ gap: 16, alignItems: 'center' }}>
-              <label className="field" style={{ minWidth: 240 }}>
-                <span>Date format</span>
-                <select
-                  value={prefs.dateFormat}
-                  onChange={e => save({ dateFormat: e.target.value })}
-                >
-                  {DATE_FORMATS.map(df => <option key={df.id} value={df.id}>{df.sample}</option>)}
-                </select>
-              </label>
-
-              <label className="field" style={{ minWidth: 220 }}>
-                <span>Default range</span>
-                <select
-                  value={prefs.pastDefaultRange}
-                  onChange={e => save({ pastDefaultRange: e.target.value })}
-                >
-                  <option value="all">All time</option>
-                  <option value="30d">Last 30 days</option>
-                  <option value="7d">Last 7 days</option>
-                </select>
-              </label>
+        <section className="settings-section">
+          <header>
+            <span>02</span>
+            <div>
+              <h2>Navigation</h2>
+              <p>Arrange your journal and choose where it opens.</p>
             </div>
-          </fieldset>
+          </header>
+          <div className="settings-navigation">
+            <div className="settings-nav-list">
+              {prefs.navOrder.map((key, index) => (
+                <div className="settings-nav-row" key={key}>
+                  <span className="settings-nav-number">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                  <strong>{NAV_META[key].label}</strong>
+                  <div>
+                    <button
+                      type="button"
+                      disabled={index === 0}
+                      onClick={() => moveNav(key, "up")}
+                      aria-label={`Move ${NAV_META[key].label} up`}
+                    >
+                      ↑
+                    </button>
+                    <button
+                      type="button"
+                      disabled={index === prefs.navOrder.length - 1}
+                      onClick={() => moveNav(key, "down")}
+                      aria-label={`Move ${NAV_META[key].label} down`}
+                    >
+                      ↓
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <label className="settings-opening">
+              <span>Open Dear Self on</span>
+              <select
+                value={prefs.landingPage}
+                onChange={(event) => save({ landingPage: event.target.value })}
+              >
+                {prefs.navOrder.map((key) => (
+                  <option key={key} value={key}>
+                    {NAV_META[key].label}
+                  </option>
+                ))}
+              </select>
+              <small>This does not change the tab order.</small>
+            </label>
+          </div>
+        </section>
 
-          <div className="row" style={{ justifyContent: 'center', marginTop: 4 }}>
-            <small style={{ opacity: .7 }}>
-              Dear Self • Settings save locally on this device.
-            </small>
+        <section className="settings-section settings-section--data">
+          <header>
+            <span>03</span>
+            <div>
+              <h2>Your Data</h2>
+              <p>Protect your private journal or begin again.</p>
+            </div>
+          </header>
+          <div className="settings-data-actions">
+            <button type="button" onClick={exportBackup}>
+              <strong>Export journal backup</strong>
+              <span>Downloads a private Dear Self JSON backup.</span>
+            </button>
+            <button type="button" onClick={() => importRef.current?.click()}>
+              <strong>Import journal backup</strong>
+              <span>Restores from a Dear Self JSON backup.</span>
+            </button>
+            <input
+              ref={importRef}
+              type="file"
+              accept="application/json,.json"
+              onChange={importBackup}
+              hidden
+            />
+            <button type="button" onClick={restoreAppearance}>
+              <strong>Reset appearance</strong>
+              <span>Restore the original visual preferences only.</span>
+            </button>
+            <button
+              type="button"
+              className="danger"
+              onClick={() => setConfirmClear(true)}
+            >
+              <strong>Clear all journal data</strong>
+              <span>Permanently remove everything stored by Dear Self.</span>
+            </button>
+          </div>
+        </section>
+
+        <footer className="settings-footer">
+          Dear Self · Your journal stays locally on this device.
+        </footer>
+      </section>
+
+      {notice && (
+        <div className="settings-toast" role="status" aria-live="polite">
+          <span aria-hidden="true">✓</span>
+          {notice}
+        </div>
+      )}
+      {confirmClear && (
+        <div
+          className="settings-confirm"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="clear-title"
+        >
+          <div>
+            <span>One last pause</span>
+            <h2 id="clear-title">Clear your entire journal?</h2>
+            <p>
+              This permanently removes entries, favorites, your signature, and
+              preferences. Export a backup first if you may want them later.
+            </p>
+            <footer>
+              <button type="button" onClick={() => setConfirmClear(false)}>
+                Keep my journal
+              </button>
+              <button type="button" className="danger" onClick={clearAllData}>
+                Clear everything
+              </button>
+            </footer>
           </div>
         </div>
-      </section>
-    </div>
+      )}
+    </main>
   );
 }

@@ -1,392 +1,344 @@
 // src/components/Favorites.js
-import React, { useEffect, useMemo, useState } from 'react';
-import '../styles/theme.css';
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import "../styles/theme.css";
 import {
   listFavoriteItems,
   removeFavorite,
   toggleFavorite,
-} from '../services/affirmationEngine';
+} from "../services/affirmationEngine";
 
-/* ---------------- Icons (match PastEntries) ---------------- */
-const TrashIcon = ({ size = 18 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
-    <path d="M3 6h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-    <path d="M8 6l.7-1.4A2 2 0 0 1 10.4 3h3.2a2 2 0 0 1 1.7.6L16 6" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round"/>
-    <rect x="6" y="6" width="12" height="14" rx="2" ry="2" stroke="currentColor" strokeWidth="2" fill="none"/>
-    <path d="M10 10v7M14 10v7" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-  </svg>
-);
+const SORT_KEY = "favorites.sort";
+const PAGE_SIZE_KEY = "favorites.pageSize";
+const PAGE_SIZE_OPTIONS = [9, 18, 27];
 
-/* ---------------- Pagination helpers ---------------- */
-const PAGE_SIZE_KEY = 'favorites.pageSize';
-const PAGE_SIZE_OPTIONS = [12, 24, 50, 75, 100];
+const timestampOf = (item) => {
+  const value =
+    item.addedIso || item.addedAt || item.iso || item.savedAt || item.timestamp;
+  const timestamp = Number(new Date(value || 0));
+  return Number.isFinite(timestamp) ? timestamp : 0;
+};
 
-function Pager({ page, setPage, totalPages, totalItems, pageSize, setPageSize }) {
+const savedDate = (item) => {
+  const timestamp = timestampOf(item);
+  if (!timestamp) return "Saved for later";
+  return `Saved ${new Date(timestamp).toLocaleDateString(undefined, {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  })}`;
+};
+
+function Pager({ page, setPage, totalPages }) {
   if (totalPages <= 1) return null;
 
-  const go = (p) => setPage(Math.max(1, Math.min(totalPages, p)));
-
-  const windowSize = 5;
-  const start = Math.max(1, page - Math.floor(windowSize / 2));
-  const end = Math.min(totalPages, start + windowSize - 1);
-  const nums = [];
-  for (let p = start; p <= end; p++) nums.push(p);
-
-  const btn = {
-    minWidth: 34, height: 34, borderRadius: 8,
-    border: '1px solid #e5e7eb', background: '#fff',
-    cursor: 'pointer', fontWeight: 700, padding: '0 8px'
-  };
-  const disabled = { opacity: .45, cursor: 'default' };
-  const active = { background: '#eaf3ec', borderColor: '#cfe5d8' };
-
   return (
-    <nav style={{
-      maxWidth: 1050, margin: '16px auto 8px',
-      display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-        <button style={btn} disabled={page === 1} onClick={() => go(1)} aria-label="First">{'«'}</button>
-        <button style={{ ...btn, ...(page === 1 ? disabled : {}) }} disabled={page === 1} onClick={() => go(page - 1)} aria-label="Previous">{'‹'}</button>
-
-        {start > 1 && (
-          <>
-            <button style={btn} onClick={() => go(1)}>1</button>
-            <span style={{ padding: '0 4px', color: '#888' }}>…</span>
-          </>
-        )}
-        {nums.map((n) => (
-          <button
-            key={n}
-            style={{ ...btn, ...(n === page ? active : {}) }}
-            onClick={() => go(n)}
-            aria-current={n === page ? 'page' : undefined}
-          >
-            {n}
-          </button>
-        ))}
-        {end < totalPages && (
-          <>
-            <span style={{ padding: '0 4px', color: '#888' }}>…</span>
-            <button style={btn} onClick={() => go(totalPages)}>{totalPages}</button>
-          </>
-        )}
-
-        <button style={{ ...btn, ...(page === totalPages ? disabled : {}) }} disabled={page === totalPages} onClick={() => go(page + 1)} aria-label="Next">{'›'}</button>
-        <button style={btn} disabled={page === totalPages} onClick={() => go(totalPages)} aria-label="Last">{'»'}</button>
-      </div>
-
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <span style={{ color: '#6b7280' }}>
-          {totalItems.toLocaleString()} favorites • page {page} of {totalPages}
-        </span>
-        <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontWeight: 600 }}>
-          <span>Per page</span>
-          <select
-            value={pageSize}
-            onChange={(e) => setPageSize(parseInt(e.target.value, 10))}
-            style={{ height: 36, border: '1px solid #e5e7eb', borderRadius: 10, padding: '0 10px', background: '#fff' }}
-          >
-            {PAGE_SIZE_OPTIONS.map((n) => (
-              <option key={n} value={n}>{n}</option>
-            ))}
-          </select>
-        </label>
-      </div>
+    <nav className="favorites-pager" aria-label="Favorite pages">
+      <button
+        type="button"
+        disabled={page === 1}
+        onClick={() => setPage((current) => Math.max(1, current - 1))}
+      >
+        ← Previous
+      </button>
+      <span>
+        {page} of {totalPages}
+      </span>
+      <button
+        type="button"
+        disabled={page === totalPages}
+        onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+      >
+        Next →
+      </button>
     </nav>
   );
 }
 
-/* ---------------- Fixed category list ---------------- */
-const CATEGORIES = [
-  'Growth',
-  'Connection',
-  'Positivity',
-  'Confidence',
-  'Mindfulness',
-  'Self-Love',
-  'Motivation',
-  'Healing',
-  'Intuition',
-  'Peace',
-  'Gratitude',
-  'Reflection',
-];
-
-/* ---------------- Component ---------------- */
 export default function Favorites() {
-  const [items, setItems] = useState([]);
-
-  // View toggle
-  const [view, setView] = useState('grid'); // 'grid' | 'list'
-
-  // Filters / Sort
-  const [categoryFilter, setCategoryFilter] = useState('all');
-  const [sort, setSort] = useState('Newest'); // 'Newest' | 'Oldest' | 'CategoryAZ' | 'CategoryZA'
-
-  // Pagination
+  const publicPath = process.env.PUBLIC_URL || "";
+  const [items, setItems] = useState(() => listFavoriteItems());
+  const [query, setQuery] = useState("");
+  const [sort, setSortState] = useState(
+    () => localStorage.getItem(SORT_KEY) || "Newest",
+  );
   const [page, setPage] = useState(1);
   const [pageSize, setPageSizeState] = useState(() => {
     const saved = Number(localStorage.getItem(PAGE_SIZE_KEY));
-    return PAGE_SIZE_OPTIONS.includes(saved) ? saved : 12;
+    return PAGE_SIZE_OPTIONS.includes(saved) ? saved : 9;
   });
-  const setPageSize = (n) => {
-    setPageSizeState(n);
-    localStorage.setItem(PAGE_SIZE_KEY, String(n));
-    setPage(1);
-  };
-
-  // Undo state
-  const [undo, setUndo] = useState(null); // { item }
-  const [timer, setTimer] = useState(null);
-
-  useEffect(() => {
-    setItems(listFavoriteItems());
-  }, []);
+  const [pendingRemovals, setPendingRemovals] = useState([]);
+  const [toast, setToast] = useState("");
+  const undoTimer = useRef(null);
+  const toastTimer = useRef(null);
 
   const refresh = () => setItems(listFavoriteItems());
 
-  // reset page when view/sort/filter changes
-  useEffect(() => { setPage(1); }, [view, sort, categoryFilter, pageSize]);
+  useEffect(() => {
+    const onStorage = (event) => {
+      if (!event.key || event.key === "dearself.favorites") refresh();
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
 
-  const tsOf = (it) => {
-    const t = it.addedAt || it.iso || it.savedAt || it.timestamp;
-    const n = +new Date(t || 0);
-    return Number.isFinite(n) ? n : 0;
+  useEffect(
+    () => () => {
+      window.clearTimeout(undoTimer.current);
+      window.clearTimeout(toastTimer.current);
+    },
+    [],
+  );
+
+  const setSort = (value) => {
+    setSortState(value);
+    localStorage.setItem(SORT_KEY, value);
+    setPage(1);
+  };
+
+  const setPageSize = (value) => {
+    setPageSizeState(value);
+    localStorage.setItem(PAGE_SIZE_KEY, String(value));
+    setPage(1);
+  };
+
+  const showToast = (message) => {
+    setToast(message);
+    window.clearTimeout(toastTimer.current);
+    toastTimer.current = window.setTimeout(() => setToast(""), 2200);
   };
 
   const filtered = useMemo(() => {
-    let list = [...items];
-    if (categoryFilter !== 'all') {
-      list = list.filter(
-        (it) => String(it.category || '').toLowerCase() === categoryFilter.toLowerCase()
-      );
-    }
-    switch (sort) {
-      case 'Oldest':
-        list.sort((a, b) => tsOf(a) - tsOf(b));
-        break;
-      case 'CategoryAZ':
-        list.sort(
-          (a, b) =>
-            String(a.category || '').localeCompare(String(b.category || '')) ||
-            tsOf(b) - tsOf(a)
-        );
-        break;
-      case 'CategoryZA':
-        list.sort(
-          (a, b) =>
-            String(b.category || '').localeCompare(String(a.category || '')) ||
-            tsOf(b) - tsOf(a)
-        );
-        break;
-      default: // Newest
-        list.sort((a, b) => tsOf(b) - tsOf(a));
-    }
-    return list;
-  }, [items, categoryFilter, sort]);
+    const needle = query.trim().toLowerCase();
+    const next = items.filter((item) => {
+      if (!needle) return true;
+      return [item.text, item.challenge, item.category]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase()
+        .includes(needle);
+    });
 
-  // Pagination slice
-  const total = filtered.length;
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    next.sort((a, b) =>
+      sort === "Oldest"
+        ? timestampOf(a) - timestampOf(b)
+        : timestampOf(b) - timestampOf(a),
+    );
+    return next;
+  }, [items, query, sort]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const safePage = Math.min(page, totalPages);
-  const startIdx = (safePage - 1) * pageSize;
-  const pageSlice = filtered.slice(startIdx, startIdx + pageSize);
+  const visible = filtered.slice(
+    (safePage - 1) * pageSize,
+    safePage * pageSize,
+  );
 
-  // Remove (allows rapid consecutive removes)
-  const onRemove = (item) => {
-    if (timer) clearTimeout(timer);
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [page, totalPages]);
+
+  const copyFavorite = async (item) => {
+    const text = [
+      item.text,
+      item.challenge ? `A gentle challenge: ${item.challenge}` : "",
+    ]
+      .filter(Boolean)
+      .join("\n\n");
+
+    try {
+      await navigator.clipboard.writeText(text);
+      showToast("Saved words copied");
+    } catch {
+      showToast("Couldn’t copy—please try again");
+    }
+  };
+
+  const removeItem = (item) => {
     removeFavorite(item.id || item.text);
     refresh();
-    setUndo({ item });
-    const t = setTimeout(() => setUndo(null), 5000); // 5s to undo
-    setTimer(t);
+    setPendingRemovals((current) => [...current, item]);
+    window.clearTimeout(undoTimer.current);
+    undoTimer.current = window.setTimeout(() => setPendingRemovals([]), 5000);
   };
 
-  const onUndo = () => {
-    if (!undo) return;
-    if (timer) clearTimeout(timer);
-    toggleFavorite(undo.item); // re-add
+  const undoAll = () => {
+    pendingRemovals.forEach((item) => toggleFavorite(item));
+    window.clearTimeout(undoTimer.current);
+    setPendingRemovals([]);
     refresh();
-    setUndo(null);
+    showToast("Deletion undone");
   };
+
+  const hasFavorites = items.length > 0;
+  const hasResults = filtered.length > 0;
 
   return (
-    <div className="page-wrap">
-      {/* Local styles to fix pill width & pin trash bottom-right */}
-      <style>{`
-        .fav-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-          gap: 16px;
-        }
-        .fav-list {
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-        }
-        .fav-card {
-          position: relative; /* for absolute actions */
-          background: #fff;
-          border: 1px solid #eee;
-          border-radius: 12px;
-          padding: 14px 14px 38px; /* extra bottom padding so actions don't overlap */
-        }
-        .fav-card.compact {
-          display: grid;
-          grid-template-columns: 1fr;
-          gap: 10px 16px;
-        }
-        .fav-lines {
-          display: grid;
-          gap: 6px;
-        }
-        .fav-actions-abs {
-          position: absolute;
-          right: 10px;
-          bottom: 8px; /* always bottom-right */
-          display: flex;
-          align-items: center;
-          justify-content: flex-end;
-          gap: 8px;
-        }
-        .fav-trash, .fav-trash:hover, .fav-trash:active, .fav-trash:focus {
-          background: transparent !important;
-          box-shadow: none !important;
-          color: inherit !important;
-          border: none !important;
-          outline: none !important;
-        }
-        .fav-chip {
-          display: inline-flex;      /* prevents stretch */
-          width: max-content;        /* shrink-wrap pill */
-          max-width: 100%;
-          align-self: flex-start;
-          background: var(--chip-bg, #e6f4ef);
-          color: var(--chip-text, #0f5132);
-          font-weight: 600;
-          font-size: 12px;
-          padding: 4px 8px;
-          border-radius: 999px;
-        }
-      `}</style>
+    <main className="page-wrap favorites-page">
+      <section className="favorites-shell">
+        <header className="favorites-header">
+          <span>Words I’m keeping</span>
+          <h1 className="page-title">Favorites</h1>
+          <p>Little reminders worth returning to.</p>
+        </header>
 
-      <section className="card shadow-md" style={{ background: '#FFF9F1' }}>
-        <h2 className="brand-subtitle page-title" style={{ marginTop: 0, textAlign: 'center' }}>
-          Favorites
-        </h2>
-
-        {/* Controls */}
-        <div className="row gap" style={{ margin: '12px 0 10px', alignItems: 'center' }}>
-          {/* Category filter */}
-          <select
-            value={categoryFilter}
-            onChange={(e) => { setCategoryFilter(e.target.value); setPage(1); }}
-            style={{ height: 40, minWidth: 180, padding: '0 10px', borderRadius: 10, border: '1px solid #e5e7eb' }}
-          >
-            <option value="all">All categories</option>
-            {CATEGORIES.map((c) => (
-              <option key={c} value={c}>{c}</option>
-            ))}
-          </select>
-
-          {/* Sort */}
-          <select
-            value={sort}
-            onChange={(e) => { setSort(e.target.value); setPage(1); }}
-            style={{ height: 40, minWidth: 180, padding: '0 10px', borderRadius: 10, border: '1px solid #e5e7eb' }}
-          >
-            <option value="Newest">Newest first</option>
-            <option value="Oldest">Oldest first</option>
-            <option value="CategoryAZ">Category (A→Z)</option>
-            <option value="CategoryZA">Category (Z→A)</option>
-          </select>
-
-          {/* View toggle */}
-          <button
-            type="button"
-            onClick={() => setView((v) => (v === 'grid' ? 'list' : 'grid'))}
-            className="pill"
-            style={{ marginLeft: 'auto' }}
-          >
-            {view === 'grid' ? 'List View' : 'Grid View'}
-          </button>
-
-          {/* Per-page (top-right) */}
-          <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontWeight: 700 }}>
-            <span>Per page</span>
-            <select
-              value={pageSize}
-              onChange={(e) => setPageSize(parseInt(e.target.value, 10))}
-              style={{ height: 36, border: '1px solid #e5e7eb', borderRadius: 10, padding: '0 10px', background: '#fff' }}
-            >
-              {PAGE_SIZE_OPTIONS.map((n) => (
-                <option key={n} value={n}>{n}</option>
-              ))}
-            </select>
-          </label>
-        </div>
-
-        {filtered.length === 0 ? (
-          <p style={{ padding: '8px 0 16px' }}>No favorites yet. Tap the heart on Today to save one.</p>
-        ) : (
-          <div className={view === 'grid' ? 'fav-grid' : 'fav-list'}>
-            {pageSlice.map((it) => (
-              <article
-                key={it.id || it.text}
-                className={`fav-card ${view === 'list' ? 'compact' : ''}`}
-              >
-                <div className="fav-lines">
-                  {it.category ? <span className="fav-chip">{it.category}</span> : null}
-                  <p className="fav-line" style={{ margin: 0 }}>
-                    <strong>Affirmation:</strong> {it.text || '—'}
-                  </p>
-                  <p className="fav-line" style={{ margin: 0 }}>
-                    <strong>Challenge:</strong> {it.challenge || '—'}
-                  </p>
-                </div>
-
-                {/* Absolute bottom-right actions for BOTH views */}
-                <div className="fav-actions-abs">
+        {hasFavorites && (
+          <section className="favorites-toolbar" aria-label="Find saved words">
+            <img
+              className="favorites-toolbar__frame"
+              src={`${publicPath}/images/past-entries-toolbar-frame.png`}
+              alt=""
+              aria-hidden="true"
+            />
+            <label className="favorites-search">
+              <span>Search my saved words</span>
+              <span className="favorites-search__field">
+                <input
+                  type="search"
+                  value={query}
+                  placeholder="A word, thought, or phrase…"
+                  onChange={(event) => {
+                    setQuery(event.target.value);
+                    setPage(1);
+                  }}
+                />
+                {query && (
                   <button
-                    className="icon-only fav-trash"
-                    onClick={() => onRemove(it)}
-                    title="Remove"
-                    aria-label="Remove"
-                    style={{
-                      background: 'transparent',
-                      border: 'none',
-                      padding: 6,
-                      borderRadius: 8,
-                      lineHeight: 0,
+                    type="button"
+                    onClick={() => {
+                      setQuery("");
+                      setPage(1);
                     }}
+                    aria-label="Clear search"
+                    title="Clear search"
                   >
-                    <TrashIcon />
+                    ×
                   </button>
-                </div>
-              </article>
-            ))}
-          </div>
+                )}
+              </span>
+            </label>
+
+            <label className="favorites-sort">
+              <span>Arrange</span>
+              <select
+                value={sort}
+                onChange={(event) => setSort(event.target.value)}
+              >
+                <option value="Newest">Newest saved</option>
+                <option value="Oldest">Oldest saved</option>
+              </select>
+            </label>
+
+            <label className="favorites-show">
+              <span>Show</span>
+              <select
+                value={pageSize}
+                onChange={(event) => setPageSize(Number(event.target.value))}
+              >
+                {PAGE_SIZE_OPTIONS.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <span className="favorites-count">
+              {filtered.length}{" "}
+              {filtered.length === 1 ? "saved favorite" : "saved favorites"}
+            </span>
+          </section>
         )}
 
-        {/* Bottom pager */}
-        <Pager
-          page={safePage}
-          setPage={setPage}
-          totalPages={totalPages}
-          totalItems={total}
-          pageSize={pageSize}
-          setPageSize={setPageSize}
-        />
+        {!hasFavorites ? (
+          <section className="favorites-empty" aria-live="polite">
+            <span className="favorites-empty__kicker">
+              Your keepsake collection
+            </span>
+            <h2>Nothing tucked away yet</h2>
+            <p>
+              When today’s words feel worth holding onto, tap the heart beside
+              them.
+            </p>
+            <button
+              type="button"
+              onClick={() => window.location.assign("/today")}
+            >
+              Return to Today
+            </button>
+          </section>
+        ) : !hasResults ? (
+          <section className="favorites-no-results" aria-live="polite">
+            <h2>No saved words match that search</h2>
+            <p>Try another word or return to your full keepsake collection.</p>
+            <button type="button" onClick={() => setQuery("")}>
+              Clear search
+            </button>
+          </section>
+        ) : (
+          <>
+            <section
+              className={`favorites-grid ${visible.length === 1 ? "favorites-grid--single" : ""}`}
+              aria-label="Saved favorites"
+            >
+              {visible.map((item, index) => (
+                <article
+                  key={item.id || item.text}
+                  className={`favorites-note favorites-note--${(index % 3) + 1}`}
+                >
+                  <button
+                    type="button"
+                    className="favorites-note__copy-surface"
+                    onClick={() => copyFavorite(item)}
+                    aria-label="Copy this saved favorite"
+                  >
+                    <blockquote>{item.text || "—"}</blockquote>
+
+                    {item.challenge && (
+                      <span className="favorites-note__challenge">
+                        <span>A gentle challenge</span>
+                        <span>{item.challenge}</span>
+                      </span>
+                    )}
+                  </button>
+
+                  <footer>
+                    <small>{savedDate(item)}</small>
+                    <div className="favorites-note__actions">
+                      <button type="button" onClick={() => copyFavorite(item)}>
+                        Copy
+                      </button>
+                      <button type="button" onClick={() => removeItem(item)}>
+                        Unfavorite
+                      </button>
+                    </div>
+                  </footer>
+                </article>
+              ))}
+            </section>
+
+            <Pager page={safePage} setPage={setPage} totalPages={totalPages} />
+          </>
+        )}
       </section>
 
-      {/* Undo snackbar */}
-      {undo && (
-        <div className="undo-bar" role="status" aria-live="polite">
-          <span>Favorite removed.</span>
-          <button className="undo-btn" onClick={onUndo}>Undo</button>
+      {pendingRemovals.length > 0 && (
+        <div className="favorites-undo" role="status" aria-live="polite">
+          <span>
+            {pendingRemovals.length === 1
+              ? "Favorite removed"
+              : `${pendingRemovals.length} favorites removed`}
+          </span>
+          <button type="button" onClick={undoAll}>
+            {pendingRemovals.length === 1 ? "Undo" : "Undo all"}
+          </button>
         </div>
       )}
-    </div>
+
+      {toast && (
+        <div className="favorites-toast" role="status" aria-live="polite">
+          {toast}
+        </div>
+      )}
+    </main>
   );
 }
