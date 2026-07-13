@@ -3468,24 +3468,86 @@ h2.brand {
   touch-action: none;
 }
 
-.diary-signature-pad button {
+/* Signature editing controls stay hidden until the writing area is active. */
+.diary-signature-actions {
   position: absolute;
   right: 0;
-  top: -18px;
-  padding: 1px 4px;
+  top: -22px;
+  z-index: 8;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  /* Extends invisibly into the writing area so hover is not lost while
+     moving from the signature line to the controls. */
+  padding: 0 0 12px;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 150ms ease,
+    visibility 150ms ease;
+}
+
+.diary-signature-pad:hover .diary-signature-actions,
+.diary-signature-pad:focus-within .diary-signature-actions {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.diary-signature-actions button {
+  position: static;
+  padding: 1px 2px;
   border: 0;
+  border-radius: 0;
   background: transparent;
   box-shadow: none;
   color: rgba(80, 61, 51, 0.46);
   font-family: "Cormorant Garamond", Georgia, serif;
   font-size: 0.62rem;
-  opacity: 0;
+  font-style: italic;
+  line-height: 1.2;
+  opacity: 1;
   cursor: pointer;
-  transition: opacity 150ms ease;
+  transition: color 150ms ease;
 }
 
-.diary-signature-pad:hover button,
-.diary-signature-pad:focus-within button {
+.diary-signature-actions button:hover,
+.diary-signature-actions button:focus-visible,
+.diary-signature-actions button.active {
+  color: rgba(80, 61, 51, 0.82);
+  background: transparent;
+  box-shadow: none;
+  transform: none;
+}
+
+.diary-signature-actions button:hover,
+.diary-signature-actions button:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.diary-signature-actions button:focus-visible {
+  outline: 1px solid rgba(166, 122, 69, 0.38);
+  outline-offset: 1px;
+}
+
+/* Circular cursor shows the exact portion that will be erased. */
+.diary-signature-eraser-cursor {
+  position: absolute;
+  z-index: 4;
+  width: 13px;
+  height: 13px;
+  border: 1px solid rgba(104, 79, 64, 0.72);
+  border-radius: 50%;
+  background: rgba(255, 252, 246, 0.34);
+  opacity: 0;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  transition: opacity 80ms ease;
+}
+
+.diary-signature-eraser-cursor.visible {
   opacity: 1;
 }
 
@@ -3664,8 +3726,8 @@ h2.brand {
   width: 30px;
   height: 51px;
   opacity: 0;
-  transform: translate(-2px, -48px);
-  transform-origin: 2px 48px;
+  transform: translate(-2px, -40px);
+  transform-origin: 2px 40px;
   filter: saturate(1.35) contrast(1.22)
     drop-shadow(0 2px 2px rgba(69, 45, 30, 0.22));
 }

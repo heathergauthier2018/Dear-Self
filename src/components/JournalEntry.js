@@ -20,11 +20,29 @@ import { getStreak, recordDailyVisit } from "../services/streak.js";
 function SignaturePad() {
   const canvasRef = useRef(null);
   const drawingRef = useRef(false);
+  const [tool, setTool] = useState("pen");
   const [penPosition, setPenPosition] = useState({
     x: 0,
     y: 0,
     visible: false,
   });
+
+  const configureBrush = (context, canvas, activeTool = tool) => {
+    const rect = canvas.getBoundingClientRect();
+    const scale = canvas.width / Math.max(1, rect.width);
+
+    context.lineCap = "round";
+    context.lineJoin = "round";
+
+    if (activeTool === "eraser") {
+      context.globalCompositeOperation = "destination-out";
+      context.lineWidth = 11 * scale;
+    } else {
+      context.globalCompositeOperation = "source-over";
+      context.strokeStyle = "#5b463b";
+      context.lineWidth = 1.25 * scale;
+    }
+  };
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -37,15 +55,14 @@ function SignaturePad() {
       canvas.width = Math.max(1, Math.round(rect.width * scale));
       canvas.height = Math.max(1, Math.round(rect.height * scale));
       const context = canvas.getContext("2d");
-      context.lineCap = "round";
-      context.lineJoin = "round";
-      context.strokeStyle = "#5b463b";
-      context.lineWidth = 1.25 * scale;
+      configureBrush(context, canvas, "pen");
 
       if (saved) {
         const image = new Image();
-        image.onload = () =>
+        image.onload = () => {
+          context.globalCompositeOperation = "source-over";
           context.drawImage(image, 0, 0, canvas.width, canvas.height);
+        };
         image.src = saved;
       }
     };
@@ -75,22 +92,36 @@ function SignaturePad() {
   const beginDrawing = (event) => {
     event.preventDefault();
     movePen(event);
-    drawingRef.current = true;
-    event.currentTarget.setPointerCapture(event.pointerId);
-    const context = event.currentTarget.getContext("2d");
+
+    const canvas = event.currentTarget;
+    const context = canvas.getContext("2d");
     const { x, y } = point(event);
+
+    drawingRef.current = true;
+    canvas.setPointerCapture(event.pointerId);
+
+    configureBrush(context, canvas, tool);
     context.beginPath();
     context.moveTo(x, y);
+
+    if (tool === "eraser") {
+      context.lineTo(x + 0.01, y + 0.01);
+      context.stroke();
+    }
   };
 
   const draw = (event) => {
     movePen(event);
     if (!drawingRef.current) return;
     event.preventDefault();
-    const context = event.currentTarget.getContext("2d");
+    const canvas = event.currentTarget;
+    const context = canvas.getContext("2d");
     const events = event.nativeEvent.getCoalescedEvents?.() || [
       event.nativeEvent,
     ];
+
+    configureBrush(context, canvas, tool);
+
     events.forEach((nextEvent) => {
       const { x, y } = point(nextEvent);
       context.lineTo(x, y);
@@ -100,45 +131,90 @@ function SignaturePad() {
 
   const finishDrawing = (event) => {
     if (!drawingRef.current) return;
+
     drawingRef.current = false;
-    event.currentTarget.getContext("2d").closePath();
+
+    const canvas = event.currentTarget;
+    const context = canvas.getContext("2d");
+
+    context.closePath();
+    context.globalCompositeOperation = "source-over";
+
     localStorage.setItem(
       "dearself.signature.v1",
-      event.currentTarget.toDataURL(),
+      canvas.toDataURL(),
     );
   };
 
   const clearSignature = () => {
     const canvas = canvasRef.current;
     const context = canvas.getContext("2d");
+
+    context.globalCompositeOperation = "source-over";
     context.clearRect(0, 0, canvas.width, canvas.height);
+
     localStorage.removeItem("dearself.signature.v1");
+    setTool("pen");
+  };
+
+  const toggleTool = () => {
+    setTool((current) => (current === "pen" ? "eraser" : "pen"));
   };
 
   return (
-    <div className="diary-signature-pad">
+    <div className={`diary-signature-pad is-${tool}`}>
       <canvas
         ref={canvasRef}
-        aria-label="Write your name in the journal"
-        onPointerEnter={movePen}
-        onPointerLeave={() =>
-          setPenPosition((current) => ({ ...current, visible: false }))
+        aria-label={
+          tool === "eraser"
+            ? "Erase part of your journal signature"
+            : "Write your name in the journal"
         }
+        onPointerEnter={movePen}
+        onPointerLeave={() => {
+          drawingRef.current = false;
+          setPenPosition((current) => ({
+            ...current,
+            visible: false,
+          }));
+        }}
         onPointerDown={beginDrawing}
         onPointerMove={draw}
         onPointerUp={finishDrawing}
         onPointerCancel={finishDrawing}
       />
       <img
-        className={`diary-signature-pen ${penPosition.visible ? "visible" : ""}`}
+        className={`diary-signature-pen ${
+          penPosition.visible && tool === "pen" ? "visible" : ""
+        }`}
         src={`${process.env.PUBLIC_URL || ""}/images/pen-cursor.png`}
         alt=""
         aria-hidden="true"
         style={{ left: `${penPosition.x}px`, top: `${penPosition.y}px` }}
       />
-      <button type="button" onClick={clearSignature}>
-        Clear
-      </button>
+
+      <span
+        className={`diary-signature-eraser-cursor ${
+          penPosition.visible && tool === "eraser" ? "visible" : ""
+        }`}
+        aria-hidden="true"
+        style={{ left: `${penPosition.x}px`, top: `${penPosition.y}px` }}
+      />
+
+      <div className="diary-signature-actions">
+        <button
+          type="button"
+          className={tool === "eraser" ? "active" : ""}
+          onClick={toggleTool}
+          aria-pressed={tool === "eraser"}
+        >
+          {tool === "eraser" ? "Pen" : "Eraser"}
+        </button>
+
+        <button type="button" onClick={clearSignature}>
+          Clear
+        </button>
+      </div>
     </div>
   );
 }
