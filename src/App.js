@@ -1,11 +1,11 @@
 // src/App.js
 import React, { useEffect, useMemo, useState } from "react";
 import {
-  BrowserRouter as Router,
-  Navigate,
-  NavLink,
-  Route,
+  HashRouter as Router,
   Routes,
+  Route,
+  NavLink,
+  Navigate,
 } from "react-router-dom";
 import "./styles/App.css";
 import "./styles/theme.css";
