@@ -5133,3 +5133,709 @@ body.theme-blush {
     text-align: center;
   }
 }
+
+/* =========================================================
+   JULY 2026 — ADAPTIVE NOTE, RELIABLE STREAK, BACKDROP TINT
+   Keep these final overrides at the end of theme.css.
+========================================================= */
+
+/* The handwritten cover note adapts to the combined message length. */
+.diary-left-message {
+  overflow: visible;
+}
+
+.diary-left-message--short {
+  top: 64.7%;
+  height: 30%;
+}
+
+.diary-left-message--medium {
+  top: 60.5%;
+  height: 34%;
+}
+
+.diary-left-message--long {
+  top: 56.5%;
+  height: 38%;
+}
+
+.diary-left-message--extra-long {
+  top: 53.5%;
+  height: 41%;
+}
+
+.diary-left-message--medium .diary-left-message__greeting,
+.diary-left-message--medium .diary-left-message__affirmation,
+.diary-left-message--medium .diary-left-message__challenge-intro,
+.diary-left-message--medium .diary-left-message__challenge {
+  font-size: clamp(13px, 1.14vw, 19px);
+  line-height: 1.2;
+}
+
+.diary-left-message--long .diary-left-message__greeting,
+.diary-left-message--long .diary-left-message__affirmation,
+.diary-left-message--long .diary-left-message__challenge-intro,
+.diary-left-message--long .diary-left-message__challenge {
+  font-size: clamp(12px, 1.06vw, 18px);
+  line-height: 1.16;
+}
+
+.diary-left-message--extra-long .diary-left-message__greeting,
+.diary-left-message--extra-long .diary-left-message__affirmation,
+.diary-left-message--extra-long .diary-left-message__challenge-intro,
+.diary-left-message--extra-long .diary-left-message__challenge {
+  font-size: clamp(11px, 0.98vw, 17px);
+  line-height: 1.13;
+}
+
+.diary-left-message--medium .diary-left-message__challenge-intro,
+.diary-left-message--long .diary-left-message__challenge-intro,
+.diary-left-message--extra-long .diary-left-message__challenge-intro {
+  margin-top: clamp(5px, 0.7vh, 9px);
+}
+
+/* Persistent streak pin; the larger celebration remains short-lived. */
+.diary-streak-pin {
+  position: fixed;
+  z-index: 49;
+  top: 74px;
+  right: clamp(18px, 3vw, 46px);
+}
+
+.streak-celebration--compact {
+  gap: 7px;
+  padding: 7px 12px 7px 8px;
+  border-radius: 999px;
+  animation: none;
+  background: rgba(255, 252, 246, 0.9);
+  box-shadow: 0 9px 24px rgba(88, 58, 36, 0.1);
+}
+
+.streak-celebration--compact .streak-celebration__flame {
+  width: 25px;
+  height: 31px;
+}
+
+.streak-celebration--compact .streak-celebration__flame-art {
+  width: 25px;
+  height: 31px;
+  animation: none;
+}
+
+.streak-celebration--compact .streak-celebration__copy strong {
+  font-size: 1rem;
+}
+
+.streak-celebration--compact .streak-celebration__copy small {
+  margin-top: 1px;
+  font-size: 0.72rem;
+}
+
+/* All patterns now share the selected neutral or theme-derived ink. */
+body[data-bg-texture="linen"] {
+  background-image:
+    repeating-linear-gradient(0deg, var(--texture-ink) 0 1px, transparent 1px 5px),
+    repeating-linear-gradient(90deg, var(--texture-ink) 0 1px, transparent 1px 5px),
+    repeating-linear-gradient(0deg, color-mix(in srgb, var(--texture-ink) 48%, transparent) 0 2px, transparent 2px 12px),
+    repeating-linear-gradient(90deg, color-mix(in srgb, var(--texture-ink) 48%, transparent) 0 2px, transparent 2px 12px);
+}
+
+body[data-bg-texture="paper"] {
+  background-image:
+    radial-gradient(ellipse at 20% 30%, color-mix(in srgb, var(--texture-ink) 58%, transparent) 0 0.7px, transparent 0.9px),
+    radial-gradient(ellipse at 75% 65%, color-mix(in srgb, var(--texture-ink) 45%, transparent) 0 0.65px, transparent 0.9px),
+    repeating-linear-gradient(8deg, transparent 0 9px, color-mix(in srgb, var(--texture-ink) 22%, transparent) 9px 10px, transparent 10px 19px);
+  background-size: 23px 19px, 29px 25px, auto;
+}
+
+body[data-bg-texture="grid"] {
+  background-image:
+    linear-gradient(var(--texture-ink) 1px, transparent 1px),
+    linear-gradient(90deg, var(--texture-ink) 1px, transparent 1px);
+}
+
+body[data-bg-texture="dots"] {
+  background-image: radial-gradient(var(--texture-ink) 1px, transparent 1px);
+}
+
+body[data-bg-texture="plaid"] {
+  background-image:
+    repeating-linear-gradient(to right, var(--texture-ink) 0 1px, transparent 1px 14px),
+    repeating-linear-gradient(to bottom, var(--texture-ink) 0 1px, transparent 1px 14px),
+    repeating-linear-gradient(to right, color-mix(in srgb, var(--texture-ink) 45%, transparent) 0 5px, transparent 5px 28px),
+    repeating-linear-gradient(to bottom, color-mix(in srgb, var(--texture-ink) 45%, transparent) 0 5px, transparent 5px 28px);
+}
+
+@media (max-width: 780px) {
+  .diary-streak-pin {
+    top: 66px;
+    right: 10px;
+  }
+}
+
+/* Absolute final placement overrides. */
+.diary-drawn-heart--short { left: 35.8% !important; top: 53.8% !important; }
+.diary-drawn-heart--medium { left: 36.2% !important; top: 49.2% !important; }
+.diary-drawn-heart--long { left: 36.5% !important; top: 45% !important; }
+.diary-drawn-heart--extra-long { left: 36.7% !important; top: 41.8% !important; }
+
+.diary-tool-rail { transform: translateX(-48px) !important; }
+
+.diary-streak-pin {
+  top: 66px !important;
+  right: clamp(28px, 4vw, 72px) !important;
+}
+
+.streak-celebration--compact {
+  gap: 12px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  animation: none !important;
+}
+
+.streak-celebration--compact .streak-celebration__flame,
+.streak-celebration--compact .streak-celebration__flame-art {
+  width: 72px !important;
+  height: 88px !important;
+}
+
+.streak-celebration--compact .streak-celebration__copy strong {
+  font-size: 1.5rem !important;
+}
+
+.streak-celebration--compact .streak-celebration__copy small {
+  font-size: 0.94rem !important;
+}
+
+@media (max-width: 780px) {
+  .diary-tool-rail { transform: translateX(-50%) !important; }
+}
+
+/* =========================================================
+   JULY 2026 — FINAL HEART, TOOL RAIL, AND STREAK EXPERIENCE
+   Keep these rules at the very end so older tuning cannot win.
+========================================================= */
+
+/* Lift the keepsake heart clear of every adaptive note length. */
+.diary-drawn-heart--short {
+  left: 35.8% !important;
+  top: 53.8% !important;
+}
+
+.diary-drawn-heart--medium {
+  left: 36.2% !important;
+  top: 49.2% !important;
+}
+
+.diary-drawn-heart--long {
+  left: 36.5% !important;
+  top: 45% !important;
+}
+
+.diary-drawn-heart--extra-long {
+  left: 36.7% !important;
+  top: 41.8% !important;
+}
+
+/* The artwork was slightly clipped against the viewport edge. */
+.diary-tool-rail {
+  left: calc(28px - max(0px, (100vw - 1500px) / 2)) !important;
+  transform: none !important;
+}
+
+/* Persistent streak: deliberately frameless, readable, and alive. */
+.diary-streak-pin {
+  top: 66px !important;
+  right: clamp(28px, 4vw, 72px) !important;
+}
+
+.streak-celebration--compact {
+  display: flex !important;
+  gap: 12px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  overflow: visible !important;
+  animation: none !important;
+}
+
+.streak-celebration--compact .streak-celebration__flame,
+.streak-celebration--compact .streak-celebration__flame-art {
+  width: 72px !important;
+  height: 88px !important;
+}
+
+.streak-celebration--compact .streak-celebration__copy strong {
+  font-size: 1.5rem !important;
+}
+
+.streak-celebration--compact .streak-celebration__copy small {
+  font-size: 0.94rem !important;
+}
+
+/* Earned-streak celebration: large first, then the persistent pin returns. */
+.diary-streak-float {
+  position: fixed !important;
+  z-index: 10050 !important;
+  inset: 0 !important;
+  display: grid !important;
+  place-items: center !important;
+  pointer-events: none !important;
+  background: radial-gradient(
+    circle at center,
+    rgba(255, 244, 207, 0.3) 0,
+    rgba(255, 236, 184, 0.12) 22%,
+    transparent 52%
+  ) !important;
+}
+
+.diary-streak-float .streak-celebration {
+  position: relative !important;
+  display: grid !important;
+  justify-items: center !important;
+  gap: 4px !important;
+  min-width: 300px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  overflow: visible !important;
+  filter: drop-shadow(0 18px 28px rgba(136, 67, 24, 0.22));
+  animation: streak-grand-arrival 4.15s cubic-bezier(.2, .82, .2, 1) both !important;
+}
+
+.diary-streak-float .streak-celebration__flame {
+  width: 170px !important;
+  height: 205px !important;
+  overflow: visible !important;
+}
+
+.diary-streak-float .streak-celebration__flame::before,
+.diary-streak-float .streak-celebration__flame::after {
+  content: "✦";
+  position: absolute;
+  color: #efaa43;
+  font-size: 28px;
+  opacity: 0;
+  animation: streak-grand-spark 1.35s ease-out infinite;
+}
+
+.diary-streak-float .streak-celebration__flame::before {
+  left: 12px;
+  top: 54px;
+}
+
+.diary-streak-float .streak-celebration__flame::after {
+  right: 8px;
+  top: 86px;
+  animation-delay: 0.58s;
+}
+
+.diary-streak-float .streak-celebration__flame-art {
+  width: 170px !important;
+  height: 205px !important;
+  transform-origin: 50% 90% !important;
+  filter: saturate(1.28) drop-shadow(0 0 24px rgba(246, 141, 44, 0.55));
+  animation:
+    streak-grand-flame 520ms ease-in-out infinite alternate,
+    streak-grand-glow 1.15s ease-in-out infinite !important;
+}
+
+.diary-streak-float .streak-celebration__copy {
+  gap: 5px !important;
+  text-align: center !important;
+}
+
+.diary-streak-float .streak-celebration__copy strong {
+  color: #825029 !important;
+  font-size: clamp(2.2rem, 4vw, 3.5rem) !important;
+  line-height: 1 !important;
+  text-shadow: 0 2px 0 rgba(255, 252, 241, 0.9) !important;
+}
+
+.diary-streak-float .streak-celebration__copy small {
+  color: #6f5141 !important;
+  font-size: clamp(1.25rem, 2vw, 1.7rem) !important;
+}
+
+@keyframes streak-grand-arrival {
+  0% { opacity: 0; transform: translateY(34px) scale(0.32); }
+  12% { opacity: 1; transform: translateY(-8px) scale(1.13); }
+  24% { transform: translateY(0) scale(1); }
+  78% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-18px) scale(0.82); }
+}
+
+@keyframes streak-grand-flame {
+  from { transform: rotate(-3deg) scale(0.96, 1.05); }
+  to { transform: rotate(3deg) scale(1.055, 0.95); }
+}
+
+@keyframes streak-grand-glow {
+  0%, 100% {
+    filter: saturate(1.15) drop-shadow(0 0 14px rgba(246, 141, 44, 0.38));
+  }
+  50% {
+    filter: saturate(1.4) brightness(1.08) drop-shadow(0 0 34px rgba(246, 141, 44, 0.72));
+  }
+}
+
+@keyframes streak-grand-spark {
+  0% { opacity: 0; transform: translate(0, 18px) scale(0.3) rotate(0); }
+  28% { opacity: 1; }
+  100% { opacity: 0; transform: translate(10px, -38px) scale(1.1) rotate(65deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .diary-streak-float .streak-celebration,
+  .diary-streak-float .streak-celebration__flame-art,
+  .diary-streak-float .streak-celebration__flame::before,
+  .diary-streak-float .streak-celebration__flame::after {
+    animation-duration: 1ms !important;
+  }
+}
+
+@media (max-width: 780px) {
+  .diary-tool-rail {
+    transform: translateX(-50%) !important;
+  }
+
+  .diary-streak-pin {
+    top: 62px !important;
+    right: 12px !important;
+  }
+
+  .streak-celebration--compact .streak-celebration__flame,
+  .streak-celebration--compact .streak-celebration__flame-art {
+    width: 54px !important;
+    height: 66px !important;
+  }
+
+  .diary-streak-float .streak-celebration__flame,
+  .diary-streak-float .streak-celebration__flame-art {
+    width: 130px !important;
+    height: 158px !important;
+  }
+}
+
+/* =========================================================
+   JULY 2026 — HEART, FLAME, AND HANDMADE PAPER REFINEMENT
+========================================================= */
+
+/* The favorite mark follows the adaptive note instead of covering its text. */
+.diary-drawn-heart--short {
+  left: 34% !important;
+  top: 59% !important;
+}
+
+.diary-drawn-heart--medium {
+  left: 34.4% !important;
+  top: 54.4% !important;
+}
+
+.diary-drawn-heart--long {
+  left: 34.7% !important;
+  top: 50.2% !important;
+}
+
+.diary-drawn-heart--extra-long {
+  left: 34.9% !important;
+  top: 47% !important;
+}
+
+/* Persistent streak: an unframed, animated flame rather than a UI pill. */
+.diary-streak-pin {
+  top: 66px !important;
+  right: clamp(28px, 4vw, 72px) !important;
+}
+
+.streak-celebration--compact {
+  gap: 12px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  filter: drop-shadow(0 8px 13px rgba(154, 81, 35, 0.18));
+  overflow: visible;
+}
+
+.streak-celebration--compact .streak-celebration__flame {
+  width: 72px !important;
+  height: 88px !important;
+  overflow: visible;
+  transform-origin: 50% 88%;
+  animation: none !important;
+}
+
+.streak-celebration--compact .streak-celebration__flame::before,
+.streak-celebration--compact .streak-celebration__flame::after {
+  content: "✦";
+  position: absolute;
+  color: #e6a548;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.streak-celebration--compact .streak-celebration__flame::before {
+  left: 2px;
+  top: 11px;
+  animation: streak-ember-rise 1.8s ease-out infinite;
+}
+
+.streak-celebration--compact .streak-celebration__flame::after {
+  right: 1px;
+  top: 23px;
+  animation: streak-ember-rise 1.8s ease-out 0.85s infinite;
+}
+
+.streak-celebration--compact .streak-celebration__flame-art {
+  width: 72px !important;
+  height: 88px !important;
+  transform-origin: 50% 88%;
+  filter:
+    saturate(1.16)
+    drop-shadow(0 0 7px rgba(244, 153, 57, 0.34));
+  animation: persistent-flame-glow 1.15s ease-in-out infinite !important;
+}
+
+.streak-celebration--compact .streak-celebration__flame-art--flicker,
+.diary-streak-float .streak-celebration__flame-art--flicker {
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 2 !important;
+  clip-path: polygon(8% 0, 92% 0, 86% 67%, 14% 67%) !important;
+  transform-origin: 50% 68% !important;
+  pointer-events: none !important;
+  animation:
+    flame-tongue-wave 520ms ease-in-out infinite alternate,
+    flame-tongue-brightness 1.05s ease-in-out infinite !important;
+}
+
+.streak-celebration--compact .streak-celebration__copy {
+  min-width: 78px;
+}
+
+.streak-celebration--compact .streak-celebration__copy strong {
+  color: #8a552b;
+  font-size: 1.28rem !important;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.streak-celebration--compact .streak-celebration__copy small {
+  margin-top: 4px;
+  color: rgba(91, 67, 52, 0.78);
+  font-size: 0.82rem !important;
+  white-space: nowrap;
+}
+
+@keyframes flame-tongue-wave {
+  0% { transform: translateX(-1px) skewX(-3deg) scaleX(0.97) scaleY(1.025); }
+  48% { transform: translateX(0) skewX(1deg) scaleX(1.015) scaleY(0.985); }
+  100% { transform: translateX(1px) skewX(3deg) scaleX(0.985) scaleY(1.035); }
+}
+
+@keyframes flame-tongue-brightness {
+  0%, 100% { filter: saturate(1.08) brightness(0.98); opacity: 0.82; }
+  50% { filter: saturate(1.32) brightness(1.12); opacity: 0.96; }
+}
+
+@keyframes persistent-flame-dance {
+  0% { transform: translateY(3px) rotate(-5deg) scale(0.91, 1.08) skewX(-1.5deg); }
+  45% { transform: translateY(-4px) rotate(2deg) scale(1.07, 0.93) skewX(1deg); }
+  100% { transform: translateY(1px) rotate(5deg) scale(0.94, 1.1) skewX(2deg); }
+}
+
+@keyframes persistent-flame-glow {
+  0%, 100% {
+    filter: saturate(1.08) drop-shadow(0 0 5px rgba(244, 153, 57, 0.24));
+  }
+  50% {
+    filter: saturate(1.3) brightness(1.05) drop-shadow(0 0 12px rgba(244, 136, 42, 0.48));
+  }
+}
+
+@keyframes streak-ember-rise {
+  0% { opacity: 0; transform: translate(0, 8px) scale(0.35) rotate(0); }
+  28% { opacity: 0.9; }
+  100% { opacity: 0; transform: translate(4px, -17px) scale(0.9) rotate(35deg); }
+}
+
+/* Handmade Paper needs visible fibers even at its gentlest setting. */
+body[data-bg-texture="paper"] {
+  background-image:
+    radial-gradient(ellipse at 18% 28%, var(--texture-ink) 0 0.9px, transparent 1.15px),
+    radial-gradient(ellipse at 76% 66%, var(--texture-ink) 0 0.8px, transparent 1.1px),
+    repeating-linear-gradient(7deg, transparent 0 11px, var(--texture-ink) 11px 12px, transparent 12px 23px),
+    repeating-linear-gradient(97deg, transparent 0 27px, color-mix(in srgb, var(--texture-ink) 62%, transparent) 27px 28px, transparent 28px 49px);
+  background-size: 27px 23px, 39px 33px, auto, auto;
+}
+
+body[data-bg-texture="paper"][data-texture-strength="visible"] {
+  background-image:
+    radial-gradient(ellipse at 18% 28%, var(--texture-ink) 0 1.15px, transparent 1.45px),
+    radial-gradient(ellipse at 76% 66%, var(--texture-ink) 0 1px, transparent 1.35px),
+    repeating-linear-gradient(7deg, transparent 0 8px, var(--texture-ink) 8px 9px, transparent 9px 17px),
+    repeating-linear-gradient(97deg, transparent 0 19px, var(--texture-ink) 19px 20px, transparent 20px 37px);
+  background-size: 21px 18px, 31px 27px, auto, auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .streak-celebration--compact .streak-celebration__flame-art,
+  .streak-celebration--compact .streak-celebration__flame::before,
+  .streak-celebration--compact .streak-celebration__flame::after {
+    animation: none !important;
+  }
+}
+
+@media (max-width: 780px) {
+  .diary-streak-pin {
+    top: 62px !important;
+    right: 12px !important;
+  }
+
+  .streak-celebration--compact .streak-celebration__flame,
+  .streak-celebration--compact .streak-celebration__flame-art {
+    width: 54px !important;
+    height: 66px !important;
+  }
+}
+
+/* Keep the rail the same distance from the viewport edge on every monitor,
+   then move it left by exactly three 27px plaid columns. */
+.diary-tool-rail {
+  left: calc(28px - max(0px, (100vw - 1500px) / 2)) !important;
+  transform: translateX(-81px) !important;
+}
+
+.streak-celebration--compact {
+  display: grid !important;
+  justify-items: center !important;
+  gap: 2px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  filter: drop-shadow(0 8px 13px rgba(154, 81, 35, 0.18));
+  overflow: visible !important;
+  animation: none !important;
+}
+
+.streak-celebration--compact .streak-celebration__flame {
+  width: 72px !important;
+  height: 88px !important;
+  overflow: visible !important;
+  transform: translateX(7px);
+}
+
+.streak-celebration--compact .streak-celebration__flame::before,
+.streak-celebration--compact .streak-celebration__flame::after {
+  content: "✦";
+  position: absolute;
+  color: #e6a548;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.streak-celebration--compact .streak-celebration__flame::before {
+  left: 2px;
+  top: 11px;
+  animation: streak-ember-rise 1.8s ease-out infinite;
+}
+
+.streak-celebration--compact .streak-celebration__flame::after {
+  right: 1px;
+  top: 23px;
+  animation: streak-ember-rise 1.8s ease-out 0.85s infinite;
+}
+
+.streak-celebration--compact .streak-celebration__flame-art {
+  width: 72px !important;
+  height: 88px !important;
+  transform-origin: 50% 88%;
+  filter: saturate(1.16) drop-shadow(0 0 7px rgba(244, 153, 57, 0.34));
+  animation:
+    natural-flame-breathe 1.65s ease-in-out infinite,
+    persistent-flame-glow 1.65s ease-in-out infinite !important;
+}
+
+.streak-celebration--compact .streak-celebration__copy {
+  min-width: 154px;
+  justify-items: center;
+  text-align: center;
+  transform: translateY(-5px);
+}
+
+.streak-celebration--compact .streak-celebration__copy strong {
+  color: #8a552b;
+  font-size: 1.28rem !important;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.streak-celebration--compact .streak-celebration__copy small {
+  margin-top: 5px;
+  color: rgba(91, 57, 39, 0.9);
+  font-size: 0.96rem !important;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+@keyframes natural-flame-breathe {
+  0%, 100% {
+    transform: translateY(0) skewX(-0.7deg) scaleX(0.99) scaleY(1.015);
+  }
+  35% {
+    transform: translateY(-1px) skewX(0.8deg) scaleX(1.008) scaleY(0.992);
+  }
+  68% {
+    transform: translateY(0) skewX(-0.25deg) scaleX(0.996) scaleY(1.025);
+  }
+}
+
+@keyframes persistent-flame-glow {
+  0%, 100% {
+    filter: saturate(1.08) drop-shadow(0 0 5px rgba(244, 153, 57, 0.24));
+  }
+  50% {
+    filter: saturate(1.3) brightness(1.05)
+      drop-shadow(0 0 12px rgba(244, 136, 42, 0.48));
+  }
+}
+
+@keyframes streak-ember-rise {
+  0% { opacity: 0; transform: translate(0, 8px) scale(0.35) rotate(0); }
+  28% { opacity: 0.9; }
+  100% { opacity: 0; transform: translate(4px, -17px) scale(0.9) rotate(35deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .streak-celebration--compact .streak-celebration__flame-art,
+  .streak-celebration--compact .streak-celebration__flame::before,
+  .streak-celebration--compact .streak-celebration__flame::after {
+    animation: none !important;
+  }
+}
+
+/* Preserve the existing centered mobile toolbar behavior. */
+@media (max-width: 780px) {
+  .diary-tool-rail {
+    transform: translateX(-50%) !important;
+  }
+}
