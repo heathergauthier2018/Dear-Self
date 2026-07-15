@@ -6,6 +6,8 @@ export const DEFAULT_PREFS = {
   headerFont: "merriweather",
   siteBg: "#FAF9F6",
   bgTexture: "none",
+  textureTone: "neutral",
+  textureStrength: "whisper",
   siteWidth: "950px",
   cardDensity: "cozy",
   compactUI: false,
@@ -87,6 +89,27 @@ export function applyPrefsToDOM(prefs = loadPrefs()) {
   body.setAttribute(
     "data-bg-texture",
     prefs.bgTexture || DEFAULT_PREFS.bgTexture,
+  );
+  body.setAttribute(
+    "data-texture-tone",
+    prefs.textureTone || DEFAULT_PREFS.textureTone,
+  );
+  body.setAttribute(
+    "data-texture-strength",
+    prefs.textureStrength || DEFAULT_PREFS.textureStrength,
+  );
+
+  const strength = prefs.textureStrength === "visible" ? 0.22 : 0.09;
+  const themedRgb = {
+    blush: "206, 107, 128",
+    sage: "92, 148, 122",
+    midnight: "43, 76, 153",
+  }[prefs.brandTheme] || "112, 91, 76";
+  const textureRgb =
+    prefs.textureTone === "theme" ? themedRgb : "112, 91, 76";
+  body.style.setProperty(
+    "--texture-ink",
+    `rgba(${textureRgb}, ${strength})`,
   );
   return prefs;
 }

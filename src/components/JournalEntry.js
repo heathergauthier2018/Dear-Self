@@ -15,7 +15,10 @@ import {
 import { loadPrefs, savePrefs } from "../utils/prefs";
 
 import StreakBadge from "../utils/StreakBadge.js";
-import { getStreak, recordDailyVisit } from "../services/streak.js";
+import { getStreak, recordDailyCheckin } from "../services/streak.js";
+
+// Keep at 1 while visually testing. Change to 2 before the final release.
+const STREAK_DISPLAY_MINIMUM = 1;
 
 function SignaturePad() {
   const canvasRef = useRef(null);
@@ -235,6 +238,14 @@ const stripChalPrefix = (value = "") =>
     .replace(/^\[|\]$/g, "")
     .trim();
 
+const noteSizeClass = (affirmation = "", challenge = "") => {
+  const length = `${affirmation} ${challenge}`.trim().length;
+  if (length >= 155) return "diary-left-message--extra-long";
+  if (length >= 112) return "diary-left-message--long";
+  if (length >= 78) return "diary-left-message--medium";
+  return "diary-left-message--short";
+};
+
 /* =========================================================
    DIARY ASSETS
 ========================================================= */
@@ -376,13 +387,8 @@ export default function JournalEntry() {
   const [toastMessage, setToastMessage] = useState("");
   const savedToastTimer = useRef(null);
 
-  const initialVisit = useRef(null);
-  if (!initialVisit.current) initialVisit.current = recordDailyVisit();
-
-  const [streak, setStreak] = useState(initialVisit.current.value);
-  const [showStreak, setShowStreak] = useState(
-    initialVisit.current.isNewDay && initialVisit.current.value >= 2,
-  );
+  const [streak, setStreak] = useState(() => getStreak());
+  const [showStreak, setShowStreak] = useState(false);
   const streakTimer = useRef(null);
 
   const activeTheme = ["sage", "blush", "midnight"].includes(
@@ -402,6 +408,11 @@ export default function JournalEntry() {
   const affirmation = stripAffPrefix(card.text || card.affirmation || "");
 
   const challenge = stripChalPrefix(card.challenge || "");
+  const adaptiveNoteClass = noteSizeClass(affirmation, challenge);
+  const adaptiveHeartClass = adaptiveNoteClass.replace(
+    "diary-left-message--",
+    "diary-drawn-heart--",
+  );
 
   const isFavorite = useMemo(
     () =>
@@ -452,15 +463,12 @@ export default function JournalEntry() {
     let midnightTimer;
 
     const refreshDailyState = () => {
-      const visit = recordDailyVisit();
       const nextCard = ensureTodayAffirmation();
 
       setCard(nextCard);
       setFavorites(listFavorites());
       setSavedEntryId(null);
-      setStreak(visit.value);
-
-      if (visit.isNewDay && visit.value >= 2) setShowStreak(true);
+      setStreak(getStreak());
     };
 
     const scheduleMidnightRefresh = () => {
@@ -575,8 +583,9 @@ export default function JournalEntry() {
       setSavedEntryId(newEntry.id);
     }
 
-    const nextStreak = getStreak();
-    setStreak(nextStreak);
+    const checkin = recordDailyCheckin();
+    setStreak(checkin.value);
+    if (checkin.isNewDay && checkin.value >= 2) setShowStreak(true);
     showJournalMessage("Your entry has been saved.");
     return true;
   };
@@ -610,6 +619,12 @@ export default function JournalEntry() {
           <h1 className="page-title">Today</h1>
           <p>Your thoughts are safely tucked away.</p>
         </header>
+
+        {streak >= STREAK_DISPLAY_MINIMUM && (
+          <div className="diary-streak-pin">
+            <StreakBadge value={streak} variant="compact" />
+          </div>
+        )}
 
         <section className="closed-diary-stage">
           <img
@@ -664,6 +679,12 @@ export default function JournalEntry() {
       <header className="diary-page-heading">
         <h1 className="page-title">Today</h1>
       </header>
+
+      {streak >= STREAK_DISPLAY_MINIMUM && (
+        <div className="diary-streak-pin">
+          <StreakBadge value={streak} variant="compact" />
+        </div>
+      )}
 
       {showStreak && (
         <div className="diary-streak-float">
@@ -1006,14 +1027,16 @@ export default function JournalEntry() {
 
           {isFavorite && (
             <img
-              className="diary-drawn-heart"
+              className={`diary-drawn-heart ${adaptiveHeartClass}`}
               src={`${publicPath}/images/heart-doodle-v2.png?v=3`}
               alt="Favorited"
             />
           )}
 
           {/* Handwritten message on inside cover */}
-          <section className="diary-left-message">
+          <section
+            className={`diary-left-message ${adaptiveNoteClass}`}
+          >
             <div className="diary-left-message__greeting">Dear Self,</div>
 
             <p

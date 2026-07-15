@@ -37,7 +37,22 @@ const HEADER_FONTS = [
   ["sacramento", "Sacramento"],
 ].map(([id, label]) => ({ id, label }));
 
-const TEXTURES = ["none", "linen", "plaid", "grid", "dots"];
+const BACKDROPS = [
+  { id: "warm-ivory", label: "Warm Ivory", color: "#FAF9F6" },
+  { id: "blush-mist", label: "Blush Mist", color: "#FBF2F3" },
+  { id: "sage-wash", label: "Sage Wash", color: "#F1F6F1" },
+  { id: "moonlit-blue", label: "Moonlit Blue", color: "#F0F3FA" },
+  { id: "soft-lavender", label: "Soft Lavender", color: "#F5F1F8" },
+];
+
+const TEXTURES = [
+  { id: "none", label: "Smooth" },
+  { id: "linen", label: "Fine Linen" },
+  { id: "paper", label: "Handmade Paper" },
+  { id: "grid", label: "Graph Paper" },
+  { id: "dots", label: "Dot Grid" },
+  { id: "plaid", label: "Soft Plaid" },
+];
 const NAV_META = {
   today: { label: "Today", mark: "01" },
   past: { label: "Past Entries", mark: "02" },
@@ -138,6 +153,8 @@ export default function Settings() {
       headerFont: DEFAULT_PREFS.headerFont,
       siteBg: DEFAULT_PREFS.siteBg,
       bgTexture: DEFAULT_PREFS.bgTexture,
+      textureTone: DEFAULT_PREFS.textureTone,
+      textureStrength: DEFAULT_PREFS.textureStrength,
       siteWidth: DEFAULT_PREFS.siteWidth,
       cardDensity: DEFAULT_PREFS.cardDensity,
       compactUI: DEFAULT_PREFS.compactUI,
@@ -180,6 +197,9 @@ export default function Settings() {
           <div
             className="settings-preview__paper"
             data-preview-texture={prefs.bgTexture}
+            data-texture-tone={prefs.textureTone}
+            data-texture-strength={prefs.textureStrength}
+            style={{ backgroundColor: prefs.siteBg }}
           >
             <span className="page-title">Dear Self</span>
             <strong>Little by little, day by day.</strong>
@@ -242,7 +262,7 @@ export default function Settings() {
               </select>
             </label>
             <label className="settings-color">
-              <span>Background color</span>
+              <span>Custom backdrop color</span>
               <div>
                 <input
                   type="color"
@@ -253,25 +273,85 @@ export default function Settings() {
               </div>
             </label>
           </div>
-          <div className="settings-textures" aria-label="Background texture">
-            <span>Background texture</span>
+
+          <div className="settings-backdrops" aria-label="Backdrop color">
+            <span>Journal backdrop</span>
             <div>
-              {TEXTURES.map((texture) => (
+              {BACKDROPS.map((backdrop) => (
                 <button
-                  key={texture}
+                  key={backdrop.id}
                   type="button"
-                  data-texture={texture}
-                  className={prefs.bgTexture === texture ? "active" : ""}
-                  onClick={() => save({ bgTexture: texture })}
-                  aria-pressed={prefs.bgTexture === texture}
+                  className={
+                    prefs.siteBg.toLowerCase() === backdrop.color.toLowerCase()
+                      ? "active"
+                      : ""
+                  }
+                  onClick={() => save({ siteBg: backdrop.color })}
+                  aria-pressed={
+                    prefs.siteBg.toLowerCase() === backdrop.color.toLowerCase()
+                  }
                 >
-                  <i />
-                  {texture === "none"
-                    ? "None"
-                    : texture[0].toUpperCase() + texture.slice(1)}
+                  <i style={{ "--backdrop-color": backdrop.color }} />
+                  {backdrop.label}
                 </button>
               ))}
             </div>
+          </div>
+
+          <div className="settings-textures" aria-label="Background texture">
+            <span>Backdrop texture</span>
+            <div>
+              {TEXTURES.map((texture) => (
+                <button
+                  key={texture.id}
+                  type="button"
+                  data-texture={texture.id}
+                  className={prefs.bgTexture === texture.id ? "active" : ""}
+                  onClick={() => save({ bgTexture: texture.id })}
+                  aria-pressed={prefs.bgTexture === texture.id}
+                >
+                  <i style={{ "--swatch-bg": prefs.siteBg }} />
+                  {texture.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="settings-texture-details">
+            <fieldset>
+              <legend>Texture tone</legend>
+              <button
+                type="button"
+                className={prefs.textureTone === "neutral" ? "active" : ""}
+                onClick={() => save({ textureTone: "neutral" })}
+              >
+                Neutral
+              </button>
+              <button
+                type="button"
+                className={prefs.textureTone === "theme" ? "active" : ""}
+                onClick={() => save({ textureTone: "theme" })}
+              >
+                Theme-tinted
+              </button>
+            </fieldset>
+            <fieldset>
+              <legend>Texture strength</legend>
+              <button
+                type="button"
+                className={prefs.textureStrength === "whisper" ? "active" : ""}
+                onClick={() => save({ textureStrength: "whisper" })}
+              >
+                Whisper
+              </button>
+              <button
+                type="button"
+                className={prefs.textureStrength === "visible" ? "active" : ""}
+                onClick={() => save({ textureStrength: "visible" })}
+              >
+                Visible
+              </button>
+            </fieldset>
           </div>
         </section>
 

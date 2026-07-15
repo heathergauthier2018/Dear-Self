@@ -75,7 +75,7 @@ export function getStreak(referenceDate = new Date()) {
   return count;
 }
 
-export function recordDailyVisit(referenceDate = new Date()) {
+export function recordDailyCheckin(referenceDate = new Date()) {
   const todayKey = ymd(referenceDate);
   const checkins = readCheckins();
   const alreadyRecorded = checkins.includes(todayKey);
@@ -88,6 +88,9 @@ export function recordDailyVisit(referenceDate = new Date()) {
     day: todayKey,
   };
 }
+
+// Backward-compatible alias for older builds and imported backups.
+export const recordDailyVisit = recordDailyCheckin;
 
 export function getRecordedStreakDays() {
   return [...allRecordedDays()].sort();
