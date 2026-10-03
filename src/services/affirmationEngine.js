@@ -1,5 +1,9 @@
 // src/services/affirmationEngine.js
 import affirmations from "../data/affirmations";
+import {
+  CONTENT_TYPES,
+  normalizeArchiveItem,
+} from "./archiveStorage";
 
 /* ------------------------------------------------------------------ */
 /* Storage keys                                                       */
@@ -91,10 +95,15 @@ export function setUserPrefs(patch) {
 export function listEntries() {
   const list = safeRead(KEYS.entries, []);
   return Array.isArray(list)
-    ? list.map((entry) => ({
+    ? list.map((entry) => normalizeArchiveItem({
         id: entry.id,
         iso: entry.iso,
+        updatedIso: entry.updatedIso,
+        type: entry.type,
+        title: entry.title,
         content: entry.content ?? "",
+        personalCollectionIds: entry.personalCollectionIds,
+        metadata: entry.metadata,
         style: {
           themeKey: entry.style?.themeKey,
           imageSrc: entry.style?.imageSrc,
@@ -118,6 +127,13 @@ export function addEntry(content = "", style = {}) {
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
     iso: new Date().toISOString(),
     content: String(content || ""),
+    type: style.type || CONTENT_TYPES.JOURNAL,
+    title: style.title || "",
+    updatedIso: new Date().toISOString(),
+    personalCollectionIds: Array.isArray(style.personalCollectionIds)
+      ? style.personalCollectionIds
+      : [],
+    metadata: style.metadata || {},
     style: {
       themeKey,
       imageSrc: style.imageSrc ?? imageUrl(`${themeKey}.png`),
@@ -153,6 +169,16 @@ export function updateEntry(id, patch = {}) {
   const previous = list[index];
   list[index] = {
     ...previous,
+    updatedIso: new Date().toISOString(),
+    ...(patch.title !== undefined ? { title: String(patch.title) } : {}),
+    ...(patch.personalCollectionIds !== undefined
+      ? {
+          personalCollectionIds: Array.isArray(patch.personalCollectionIds)
+            ? [...new Set(patch.personalCollectionIds.filter(Boolean))]
+            : [],
+        }
+      : {}),
+    ...(patch.metadata !== undefined ? { metadata: patch.metadata || {} } : {}),
     content:
       patch.content !== undefined
         ? String(patch.content)
@@ -165,6 +191,10 @@ export function updateEntry(id, patch = {}) {
 
   safeWrite(KEYS.entries, list);
   return true;
+}
+
+export function setEntryCollections(id, personalCollectionIds = []) {
+  return updateEntry(id, { personalCollectionIds });
 }
 
 /* ------------------------------------------------------------------ */

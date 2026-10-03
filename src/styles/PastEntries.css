@@ -77,6 +77,115 @@
   font-style: italic;
 }
 
+.archive-collections {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 14px;
+  width: min(1020px, calc(100% - 24px));
+  margin: 0 auto 18px;
+  padding: 17px 20px;
+  border: 1px solid var(--archive-line);
+  border-radius: 22px;
+  background: rgba(255, 252, 247, 0.66);
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.75);
+}
+
+.archive-collections__group {
+  display: grid;
+  gap: 8px;
+}
+
+.archive-collections__heading {
+  color: var(--archive-muted);
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.archive-collections__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.archive-collections__list button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 7px 12px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--archive-ink);
+  font-family: Georgia, "Times New Roman", serif;
+  cursor: pointer;
+  transition: background 0.16s ease, border-color 0.16s ease, transform 0.16s ease;
+}
+
+.archive-collections__list button:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.78);
+  border-color: var(--archive-line);
+}
+
+.archive-collections__list button.is-active {
+  border-color: color-mix(in srgb, var(--brand-header) 42%, #cab7a6);
+  background: color-mix(in srgb, var(--brand-header) 10%, #fffaf5);
+  box-shadow: 0 5px 15px rgba(91, 65, 53, 0.06);
+}
+
+.archive-collections__list button small {
+  min-width: 20px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: rgba(123, 94, 78, 0.08);
+  color: var(--archive-muted);
+  font: 700 0.66rem/1.2 Inter, sans-serif;
+}
+
+.archive-collections__personal {
+  padding-top: 12px;
+  border-top: 1px solid color-mix(in srgb, var(--archive-line) 70%, transparent);
+}
+
+.archive-collections__personal-row {
+  position: relative;
+  display: inline-flex;
+}
+
+.archive-collections__personal-row > button:first-child {
+  padding-right: 30px;
+}
+
+.archive-collections__list .archive-collections__remove {
+  position: absolute;
+  top: 50%;
+  right: 5px;
+  min-width: 22px;
+  width: 22px;
+  min-height: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  transform: translateY(-50%);
+  color: var(--archive-muted);
+  font-family: Inter, sans-serif;
+}
+
+.archive-collections__list .archive-collections__remove:hover {
+  transform: translateY(-50%);
+  color: #9c5b5b;
+}
+
+.archive-collections__list .archive-collections__new {
+  border-style: dashed;
+  border-color: var(--archive-line);
+  color: var(--archive-muted);
+}
+
 .archive-toolbar.row {
   position: relative;
   display: grid;
@@ -529,8 +638,9 @@
 }
 
 .archive-page .pe-actions {
-  justify-content: flex-end;
-  gap: 12px;
+  justify-content: center;
+  gap: 2px;
+  padding-inline: 4px;
   opacity: 0;
   transform: translateY(5px);
   transition:
@@ -546,8 +656,166 @@
 
 .archive-page .pe-actions button {
   color: var(--archive-ink);
-  font-size: 0.82rem;
+  min-height: 25px;
+  padding: 3px 5px;
+  font-size: 0.7rem;
   text-decoration: none;
+}
+
+.archive-page .pe-collect {
+  order: 0;
+  color: color-mix(in srgb, var(--brand-header) 68%, var(--archive-ink));
+}
+
+.archive-page .pe-actions .pe-download,
+.archive-page .pe-actions .pe-delete {
+  width: 25px;
+  min-width: 25px;
+  padding: 3px;
+}
+
+.archive-collection-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 12000;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(66, 51, 47, 0.36);
+  backdrop-filter: blur(7px);
+}
+
+.archive-collection-modal__panel {
+  width: min(510px, 100%);
+  max-height: min(720px, calc(100vh - 48px));
+  overflow: auto;
+  padding: 36px;
+  border: 1px solid var(--archive-line);
+  border-radius: 26px;
+  background: linear-gradient(145deg, #fffdf9, #fff8f1);
+  color: var(--archive-ink);
+  box-shadow: 0 28px 80px rgba(55, 38, 33, 0.24);
+  box-sizing: border-box;
+}
+
+.archive-collection-modal__panel h2 {
+  margin: 6px 0 8px;
+  color: var(--brand-header);
+  font: 600 1.85rem/1.15 "Cormorant Garamond", Georgia, serif;
+}
+
+.archive-collection-modal__panel > p {
+  margin: 0 0 22px;
+  color: var(--archive-muted);
+  font-family: Georgia, serif;
+}
+
+.archive-collection-modal__panel > label {
+  display: grid;
+  gap: 6px;
+  margin-top: 14px;
+  color: var(--archive-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.archive-collection-modal__panel input[type="text"],
+.archive-collection-modal__panel input:not([type]),
+.archive-collection-modal__panel textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--archive-line);
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.76);
+  color: var(--archive-ink);
+  font: 1rem/1.45 Georgia, serif;
+  box-sizing: border-box;
+  outline: none;
+}
+
+.archive-collection-modal__panel textarea {
+  min-height: 92px;
+  resize: vertical;
+}
+
+.archive-collection-modal__panel input:focus,
+.archive-collection-modal__panel textarea:focus {
+  border-color: color-mix(in srgb, var(--brand-header) 60%, #bca796);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-header) 10%, transparent);
+}
+
+.archive-collection-modal__choices {
+  display: grid;
+  gap: 8px;
+  max-height: 330px;
+  overflow: auto;
+}
+
+.archive-collection-modal__choices label {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 12px 14px;
+  border: 1px solid var(--archive-line);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.52);
+  cursor: pointer;
+}
+
+.archive-collection-modal__choices input {
+  margin-top: 3px;
+  accent-color: var(--brand-header);
+}
+
+.archive-collection-modal__choices label > span {
+  display: grid;
+  gap: 3px;
+}
+
+.archive-collection-modal__choices strong {
+  font-family: Georgia, serif;
+  font-weight: 600;
+}
+
+.archive-collection-modal__choices small {
+  color: var(--archive-muted);
+}
+
+.archive-collection-modal__empty {
+  padding: 18px;
+  border: 1px dashed var(--archive-line);
+  border-radius: 15px;
+  text-align: center;
+}
+
+.archive-collection-modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  margin-top: 24px;
+}
+
+.archive-collection-modal__actions button {
+  padding: 10px 16px;
+  border: 1px solid var(--archive-line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.68);
+  color: var(--archive-ink);
+  font: 600 0.82rem/1 Inter, sans-serif;
+  cursor: pointer;
+}
+
+.archive-collection-modal__actions button.primary {
+  border-color: transparent;
+  background: color-mix(in srgb, var(--brand-header) 68%, #9d7e77);
+  color: white;
+}
+
+.archive-collection-modal__actions button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 /* Layered archival mounts: the saved paper is the artwork, not a web card. */
@@ -628,6 +896,8 @@
   left: 8px;
   right: 8px;
   bottom: 12px;
+  width: auto;
+  box-sizing: border-box;
   border-radius: 0 0 10px 10px;
 }
 

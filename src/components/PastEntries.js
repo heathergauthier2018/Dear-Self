@@ -6,8 +6,15 @@ import html2canvas from "html2canvas";
 import {
   listEntries,
   removeEntry,
+  setEntryCollections,
   updateEntry, // merges by id
 } from "../services/affirmationEngine";
+import {
+  SYSTEM_COLLECTIONS,
+  createPersonalCollection,
+  deletePersonalCollection,
+  listPersonalCollections,
+} from "../services/archiveStorage";
 import PAPERS from "../utils/paperImages";
 import { savePrefs } from "../utils/prefs";
 
@@ -404,6 +411,13 @@ export default function PastEntries() {
   const [themeFilter, setThemeFilter] = useState("all");
   const [items, setItems] = useState(() => listEntries());
   const [view, setView] = useState("grid"); // grid | list
+  const [activeCollection, setActiveCollection] = useState("all");
+  const [personalCollections, setPersonalCollections] = useState(() =>
+    listPersonalCollections(),
+  );
+  const [collectionDialog, setCollectionDialog] = useState(null);
+  const [newCollectionName, setNewCollectionName] = useState("");
+  const [newCollectionDescription, setNewCollectionDescription] = useState("");
 
   // Pagination
   const [page, setPage] = useState(1);
@@ -437,9 +451,16 @@ export default function PastEntries() {
 
   // keep in sync if another tab changes
   useEffect(() => {
-    const onStorage = () => setItems(listEntries());
+    const onStorage = () => {
+      setItems(listEntries());
+      setPersonalCollections(listPersonalCollections());
+    };
     window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
+    window.addEventListener("dearself:archive", onStorage);
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("dearself:archive", onStorage);
+    };
   }, []);
 
   // Whenever view or sort changes, reset to page 1
@@ -461,6 +482,17 @@ export default function PastEntries() {
   /* --------- Filter/Sort --------- */
   const filtered = useMemo(() => {
     let list = [...items];
+
+    const systemCollection = SYSTEM_COLLECTIONS.find(
+      (collection) => collection.id === activeCollection,
+    );
+    if (systemCollection?.type) {
+      list = list.filter((entry) => entry.type === systemCollection.type);
+    } else if (activeCollection.startsWith("collection-")) {
+      list = list.filter((entry) =>
+        entry.personalCollectionIds?.includes(activeCollection),
+      );
+    }
 
     if (query.trim()) {
       const q = query.toLowerCase();
@@ -504,7 +536,71 @@ export default function PastEntries() {
         list.sort((a, b) => +new Date(b.iso) - +new Date(a.iso));
     }
     return list;
-  }, [items, query, themeFilter, date, sort]);
+  }, [items, query, themeFilter, date, sort, activeCollection]);
+
+  const collectionCount = (collection) => {
+    if (collection.id === "all") return items.length;
+    if (collection.type) {
+      return items.filter((entry) => entry.type === collection.type).length;
+    }
+    return items.filter((entry) =>
+      entry.personalCollectionIds?.includes(collection.id),
+    ).length;
+  };
+
+  const selectCollection = (id) => {
+    setActiveCollection(id);
+    setPage(1);
+  };
+
+  const saveNewCollection = () => {
+    const collection = createPersonalCollection({
+      name: newCollectionName,
+      description: newCollectionDescription,
+    });
+    if (!collection) return;
+    setPersonalCollections(listPersonalCollections());
+    setNewCollectionName("");
+    setNewCollectionDescription("");
+    setActiveCollection(collection.id);
+    setCollectionDialog(null);
+    setPage(1);
+    showToast("Collection created");
+  };
+
+  const toggleEntryCollection = (entry, collectionId) => {
+    const current = entry.personalCollectionIds || [];
+    const next = current.includes(collectionId)
+      ? current.filter((id) => id !== collectionId)
+      : [...current, collectionId];
+    setEntryCollections(entry.id, next);
+    const refreshed = listEntries();
+    setItems(refreshed);
+    setCollectionDialog((dialog) =>
+      dialog?.mode === "assign"
+        ? {
+            ...dialog,
+            entry: refreshed.find((item) => item.id === entry.id),
+          }
+        : dialog,
+    );
+  };
+
+  const removePersonalCollection = (collection) => {
+    items.forEach((entry) => {
+      if (entry.personalCollectionIds?.includes(collection.id)) {
+        setEntryCollections(
+          entry.id,
+          entry.personalCollectionIds.filter((id) => id !== collection.id),
+        );
+      }
+    });
+    deletePersonalCollection(collection.id);
+    setItems(listEntries());
+    setPersonalCollections(listPersonalCollections());
+    if (activeCollection === collection.id) setActiveCollection("all");
+    showToast("Collection removed; your reflections are still safe");
+  };
 
   // Hide any card that's pending deletion (optimistic)
   const pendingDeleteIds = new Set(pendingDeletes.map((pending) => pending.id));
@@ -913,6 +1009,12 @@ export default function PastEntries() {
 
         {/* Actions: Copy • Edit • Download • Trash */}
         <div className="pe-actions">
+          <button
+            className="link-button pe-collect"
+            onClick={() => setCollectionDialog({ mode: "assign", entry: e })}
+          >
+            Collect
+          </button>
           <button className="link-button pe-copy" onClick={() => copyEntry(e)}>
             Copy
           </button>
@@ -945,6 +1047,14 @@ export default function PastEntries() {
   );
   const selectedEmptyPaper =
     PAPERS.find((paper) => paper.id === themeFilter) || PAPERS[0];
+  const activeSystemCollection = SYSTEM_COLLECTIONS.find(
+    (collection) => collection.id === activeCollection,
+  );
+  const activePersonalCollection = personalCollections.find(
+    (collection) => collection.id === activeCollection,
+  );
+  const emptyCollection =
+    activeCollection !== "all" && !query.trim() && !date && themeFilter === "all";
   const onlyPaperFilterIsActive =
     themeFilter !== "all" && !query.trim() && !date;
   const publicPath = process.env.PUBLIC_URL || "";
@@ -958,8 +1068,62 @@ export default function PastEntries() {
         <header className="archive-header">
           <span className="archive-kicker">My private collection</span>
           <h1 className="brand-subtitle page-title">Past Entries</h1>
-          <p>Little by little, day by day.</p>
+          <p>Every reflection has a place to return to.</p>
         </header>
+
+        <nav className="archive-collections" aria-label="Reflection collections">
+          <div className="archive-collections__group">
+            <span className="archive-collections__heading">Dear Self archive</span>
+            <div className="archive-collections__list">
+              {SYSTEM_COLLECTIONS.map((collection) => (
+                <button
+                  key={collection.id}
+                  type="button"
+                  className={activeCollection === collection.id ? "is-active" : ""}
+                  onClick={() => selectCollection(collection.id)}
+                  title={collection.description}
+                >
+                  <span>{collection.label}</span>
+                  <small>{collectionCount(collection)}</small>
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="archive-collections__group archive-collections__personal">
+            <span className="archive-collections__heading">My collections</span>
+            <div className="archive-collections__list">
+              {personalCollections.map((collection) => (
+                <span className="archive-collections__personal-row" key={collection.id}>
+                  <button
+                    type="button"
+                    className={activeCollection === collection.id ? "is-active" : ""}
+                    onClick={() => selectCollection(collection.id)}
+                    title={collection.description || collection.name}
+                  >
+                    <span>{collection.name}</span>
+                    <small>{collectionCount(collection)}</small>
+                  </button>
+                  <button
+                    type="button"
+                    className="archive-collections__remove"
+                    onClick={() => removePersonalCollection(collection)}
+                    aria-label={`Delete ${collection.name} collection`}
+                    title="Delete collection (reflections stay safe)"
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+              <button
+                type="button"
+                className="archive-collections__new"
+                onClick={() => setCollectionDialog({ mode: "create" })}
+              >
+                <span>＋ New collection</span>
+              </button>
+            </div>
+          </div>
+        </nav>
 
         {/* Controls */}
         <div className="row gap archive-toolbar">
@@ -1093,7 +1257,33 @@ export default function PastEntries() {
               ))}
             </div>
 
-            {!archiveHasEntries ? (
+            {emptyCollection ? (
+              <>
+                <span className="archive-empty__eyebrow">
+                  {activePersonalCollection ? "A collection of your own" : "A place is waiting"}
+                </span>
+                <h3>
+                  {activePersonalCollection
+                    ? `${activePersonalCollection.name} is ready`
+                    : `Your first ${activeSystemCollection?.label || "reflection"} will gather here`}
+                </h3>
+                <p>
+                  {activePersonalCollection
+                    ? "Choose Collect on any saved page to add it here. Its original archive home will remain unchanged."
+                    : activeSystemCollection?.description ||
+                      "This collection will grow as you continue meeting yourself."}
+                </p>
+                <div className="archive-empty__actions">
+                  <button
+                    type="button"
+                    className="archive-empty__secondary"
+                    onClick={() => selectCollection("all")}
+                  >
+                    Return to all reflections
+                  </button>
+                </div>
+              </>
+            ) : !archiveHasEntries ? (
               <>
                 <span className="archive-empty__eyebrow">A new beginning</span>
                 <h3>Your first page is waiting</h3>
@@ -1589,6 +1779,112 @@ export default function PastEntries() {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {collectionDialog && (
+        <div
+          className="archive-collection-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="collection-dialog-title"
+          onClick={() => setCollectionDialog(null)}
+        >
+          <section
+            className="archive-collection-modal__panel"
+            onClick={(event) => event.stopPropagation()}
+          >
+            {collectionDialog.mode === "create" ? (
+              <>
+                <span className="archive-empty__eyebrow">A place of your own</span>
+                <h2 id="collection-dialog-title">Create a collection</h2>
+                <p>Gather reflections by what they mean to you.</p>
+                <label>
+                  <span>Collection name</span>
+                  <input
+                    autoFocus
+                    maxLength={60}
+                    value={newCollectionName}
+                    onChange={(event) => setNewCollectionName(event.target.value)}
+                    placeholder="Things I’m learning about myself"
+                  />
+                </label>
+                <label>
+                  <span>Description <small>(optional)</small></span>
+                  <textarea
+                    maxLength={180}
+                    value={newCollectionDescription}
+                    onChange={(event) =>
+                      setNewCollectionDescription(event.target.value)
+                    }
+                    placeholder="A quiet place for…"
+                  />
+                </label>
+                <div className="archive-collection-modal__actions">
+                  <button type="button" onClick={() => setCollectionDialog(null)}>
+                    Not now
+                  </button>
+                  <button
+                    type="button"
+                    className="primary"
+                    disabled={!newCollectionName.trim()}
+                    onClick={saveNewCollection}
+                  >
+                    Create collection
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <span className="archive-empty__eyebrow">Personal collections</span>
+                <h2 id="collection-dialog-title">Where should this page live?</h2>
+                <p>Its original Journal Pages home will always remain.</p>
+                {personalCollections.length ? (
+                  <div className="archive-collection-modal__choices">
+                    {personalCollections.map((collection) => (
+                      <label key={collection.id}>
+                        <input
+                          type="checkbox"
+                          checked={collectionDialog.entry.personalCollectionIds?.includes(
+                            collection.id,
+                          )}
+                          onChange={() =>
+                            toggleEntryCollection(
+                              collectionDialog.entry,
+                              collection.id,
+                            )
+                          }
+                        />
+                        <span>
+                          <strong>{collection.name}</strong>
+                          {collection.description && <small>{collection.description}</small>}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="archive-collection-modal__empty">
+                    Create your first personal collection, then return to add this page.
+                  </p>
+                )}
+                <div className="archive-collection-modal__actions">
+                  <button
+                    type="button"
+                    onClick={() => setCollectionDialog({ mode: "create" })}
+                  >
+                    New collection
+                  </button>
+                  <button
+                    type="button"
+                    className="primary"
+                    onClick={() => setCollectionDialog(null)}
+                  >
+                    Done
+                  </button>
+                </div>
+              </>
+            )}
+          </section>
         </div>
       )}
     </div>
